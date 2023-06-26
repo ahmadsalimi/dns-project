@@ -236,6 +236,17 @@ class MessengerService(MessengerServiceServicer):
             chat_request.status = ChatRequest.Status.ACCEPTED
             chat_request.save()
             return
+        elif request.DESCRIPTOR.name == m.ChatMessageToServer.DESCRIPTOR.name:
+            if not ChatRequest.objects.filter(requester__username__in=[user.username, request.destination],
+                                              requestee__username__in=[user.username, request.destination],
+                                              status=ChatRequest.Status.ACCEPTED).exists():
+                return
+            self.__response_queues[request.destination].put(m.ChatMessageToClient(
+                source=user.username,
+                message_ciphertext=request.message_ciphertext,
+            ))
+        else:
+            print(f'Unknown message type: {request.DESCRIPTOR.name}')
 
 
 def grpc_handlers(server):

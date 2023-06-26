@@ -86,6 +86,16 @@ message ChatRequestFromClientResponse {
   }
 }
 
+message ChatMessageToServer {
+  string destination = 1;
+  string message_ciphertext = 2;
+}
+
+message ChatMessageToClient {
+  string source = 1;
+  string message_ciphertext = 2;
+}
+
 service MessengerService {
   rpc GetRSAPublicKey(GetRSAPublicKeyRequest) returns (GetRSAPublicKeyResponse);
 

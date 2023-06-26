@@ -105,3 +105,8 @@ class ChatRequest(models.Model):
         REJECTED = 'REJECTED'
 
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['requester', 'requestee']),
+        ]
