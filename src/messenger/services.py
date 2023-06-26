@@ -123,9 +123,9 @@ class MessengerService(MessengerServiceServicer):
     def StartSession(self, request_iterator: Iterator[m.TypedMessage],
                      context: grpc.ServicerContext) -> Iterator[m.SignedMessage]:
         m1 = next(request_iterator)
-        if not m1.type != m.LoginRequest.__class__.__name__:
+        if m1.type != m.LoginRequest.DESCRIPTOR.name:
             context.abort(grpc.StatusCode.INVALID_ARGUMENT,
-                          f'Expected {m.LoginRequest.__class__.__name__}, got {m1.type}')
+                          f'Expected {m.LoginRequest.DESCRIPTOR.name}, got {m1.type}')
         login_request = parse_typed_message(m1)
         id_ = login_request.id
         dh_public_key_y = int.from_bytes(bytes.fromhex(login_request.dh_public_key_y), 'big')
@@ -152,7 +152,11 @@ class MessengerService(MessengerServiceServicer):
         try:
             yield sign_message(m.LoginResponse(), self.rsa_private_key, dh_shared_secret)
             for message in request_iterator:
-                pass
+                if message.type == m.EchoMessage.DESCRIPTOR.name:
+                    message.value = decrypt_aes(message.value, dh_shared_secret)
+                    echo_message = parse_typed_message(message)
+                    yield sign_message(m.EchoMessage(message=echo_message.message), self.rsa_private_key,
+                                       dh_shared_secret)
         finally:
             session.delete()
 

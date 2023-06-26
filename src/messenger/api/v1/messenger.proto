@@ -52,6 +52,10 @@ message LoginRequest {
 message LoginResponse {
 }
 
+message EchoMessage {
+  string message = 1;
+}
+
 service MessengerService {
   rpc GetRSAPublicKey(GetRSAPublicKeyRequest) returns (GetRSAPublicKeyResponse);
 
