@@ -1,0 +1,9 @@
+cryptography
+Django==4.1.1
+django-4-jet==1.0.9
+psycopg2-binary==2.9.3
+sentry-sdk==0.10.2
+ipython
+django-storages
+boto3
+grpcio-tools==1.46.5
