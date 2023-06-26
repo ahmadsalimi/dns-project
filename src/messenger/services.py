@@ -1,6 +1,7 @@
 from functools import cached_property
 from typing import Iterator
 
+import google
 import grpc
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -153,17 +154,20 @@ class MessengerService(MessengerServiceServicer):
         try:
             yield sign_message(m.LoginResponse(), self.rsa_private_key, dh_shared_secret)
             for message in request_iterator:
-                if isoftype(message, m.EchoMessage):
-                    message.value = decrypt_aes(message.value, dh_shared_secret)
-                    echo_message = parse_typed_message(message)
-                    yield sign_message(m.EchoMessage(message=echo_message.message), self.rsa_private_key,
-                                       dh_shared_secret)
-                elif isoftype(message, m.ListOnlineUsersRequest):
-                    yield sign_message(m.ListOnlineUsersResponse(
-                        user_ids=[s.user.username for s in Session.objects.all()]
-                    ), self.rsa_private_key, dh_shared_secret)
+                message.value = decrypt_aes(message.value, dh_shared_secret)
+                request = parse_typed_message(message)
+                response = self.__handle_session_request(request)
+                yield sign_message(response, self.rsa_private_key, dh_shared_secret)
         finally:
             session.delete()
+
+    def __handle_session_request(self, request: google.protobuf.message.Message) -> google.protobuf.message.Message:
+        if request.DESCRIPTOR.name == m.EchoMessage.DESCRIPTOR.name:
+            return m.EchoMessage(message=request.message)
+        elif request.DESCRIPTOR.name == m.ListOnlineUsersRequest.DESCRIPTOR.name:
+            return m.ListOnlineUsersResponse(user_ids=[s.user.username for s in Session.objects.all()])
+        elif request.DESCRIPTOR.name == m.ChatRequestFromClient.DESCRIPTOR.name:
+            pass
 
 
 def grpc_handlers(server):
