@@ -132,7 +132,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # jet
 JET_SIDE_MENU_COMPACT = True
 JET_SIDE_MENU_CUSTOM_APPS = [
-    ('messenger', []),
+    ('messenger', [
+        'Configuration',
+        'ServerKey',
+        'Session',
+    ]),
     ('auth', [
         'User',
         'Group',

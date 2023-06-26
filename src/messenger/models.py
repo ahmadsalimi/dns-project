@@ -1,6 +1,9 @@
+import uuid
 from typing import Optional
 
 from django.db import models
+
+from messenger.utils import sha256_hash
 
 
 class Configuration(models.Model):
@@ -40,6 +43,10 @@ class ServerKey(models.Model):
     name = models.CharField(max_length=256, unique=True)
     value = models.BinaryField()
 
+    @property
+    def signature(self) -> str:
+        return sha256_hash(self.value).hex()
+
     @classmethod
     def get(cls, name: str, default=None) -> Optional[bytes]:
         try:
@@ -59,3 +66,20 @@ class ServerKey(models.Model):
     @classmethod
     def exists(cls, name: str) -> bool:
         return cls.objects.filter(name=name).exists()
+
+
+class Session(models.Model):
+    id = models.CharField(max_length=256, unique=True, primary_key=True, default=uuid.uuid4)
+    user = models.OneToOneField('auth.User', on_delete=models.CASCADE)
+    dh_public_key = models.BinaryField()
+    dh_shared_secret = models.BinaryField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def public_key_signature(self) -> str:
+        return sha256_hash(self.dh_public_key).hex()
+
+    @property
+    def shared_secret_signature(self) -> str:
+        return sha256_hash(self.dh_shared_secret).hex()

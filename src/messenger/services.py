@@ -1,15 +1,17 @@
 from functools import cached_property
+from typing import Iterator
 
 import grpc
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, dh
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_parameters
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
 from messenger.api.v1 import messenger_pb2 as m
 from messenger.api.v1.messenger_pb2_grpc import MessengerServiceServicer, add_MessengerServiceServicer_to_server
-from messenger.models import Configuration, ServerKey
-from messenger.utils import num2bytes
+from messenger.models import Configuration, ServerKey, Session
+from messenger.utils import num2bytes, sha256_hash, sign_message, decrypt_rsa, parse_typed_message, decrypt_aes
 
 
 class MessengerService(MessengerServiceServicer):
@@ -83,25 +85,76 @@ class MessengerService(MessengerServiceServicer):
     def dh_public_key(self) -> dh.DHPublicKey:
         return self.dh_private_key.public_key()
 
-    def GetPublicKey(self, request: m.GetServerPublicKeyRequest,
-                     context: grpc.ServicerContext) -> m.GetServerPublicKeyResponse:
-        return m.GetServerPublicKeyResponse(key=self.rsa_public_key.public_bytes(
+    def GetRSAPublicKey(self, request: m.GetRSAPublicKeyRequest,
+                        context: grpc.ServicerContext) -> m.GetRSAPublicKeyResponse:
+        return m.GetRSAPublicKeyResponse(key=self.rsa_public_key.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
         ).hex())
 
     def GetDHParameters(self, request: m.GetDHParametersRequest,
-                        context: grpc.ServicerContext) -> m.GetDHParametersResponse:
-        return m.GetDHParametersResponse(
-            p=num2bytes(self.dh_parameters.parameter_numbers().p),
+                        context: grpc.ServicerContext) -> m.SignedMessage:
+        return sign_message(m.GetDHParametersResponse(
+            p=num2bytes(self.dh_parameters.parameter_numbers().p).hex(),
             g=self.dh_parameters.parameter_numbers().g,
-            q=num2bytes(self.dh_parameters.parameter_numbers().q)
+            q=num2bytes(self.dh_parameters.parameter_numbers().q).hex()
             if self.dh_parameters.parameter_numbers().q else None,
-        )
+        ), self.rsa_private_key)
 
     def GetDHPublicKey(self, request: m.GetDHPublicKeyRequest,
-                       context: grpc.ServicerContext) -> m.GetDHPublicKeyResponse:
-        return m.GetDHPublicKeyResponse(y=num2bytes(self.dh_public_key.public_numbers().y))
+                       context: grpc.ServicerContext) -> m.SignedMessage:
+        return sign_message(m.GetDHPublicKeyResponse(y=num2bytes(self.dh_public_key.public_numbers().y).hex()),
+                            self.rsa_private_key)
+
+    def Register(self, request: m.RegisterRequest,
+                 context: grpc.ServicerContext) -> m.RegisterResponse:
+        id_ = request.id
+        password = decrypt_rsa(request.password_ciphertext, self.rsa_private_key)
+        form = UserCreationForm(dict(
+            username=id_,
+            password1=password,
+            password2=password,
+        ))
+        if not form.is_valid():
+            context.abort(grpc.StatusCode.INVALID_ARGUMENT, form.errors.as_text())
+        form.save()
+        return m.RegisterResponse()
+
+    def StartSession(self, request_iterator: Iterator[m.TypedMessage],
+                     context: grpc.ServicerContext) -> Iterator[m.SignedMessage]:
+        m1 = next(request_iterator)
+        if not m1.type != m.LoginRequest.__class__.__name__:
+            context.abort(grpc.StatusCode.INVALID_ARGUMENT,
+                          f'Expected {m.LoginRequest.__class__.__name__}, got {m1.type}')
+        login_request = parse_typed_message(m1)
+        id_ = login_request.id
+        dh_public_key_y = int.from_bytes(bytes.fromhex(login_request.dh_public_key_y), 'big')
+        dh_public_key = dh.DHPublicNumbers(y=dh_public_key_y,
+                                           parameter_numbers=self.dh_parameters.parameter_numbers()) \
+            .public_key(default_backend())
+        dh_shared_secret = sha256_hash(self.dh_private_key.exchange(dh_public_key))
+        password = decrypt_aes(bytes.fromhex(login_request.password_ciphertext), dh_shared_secret).decode()
+        form = AuthenticationForm(None, dict(
+            username=id_,
+            password=password,
+        ))
+        if not form.is_valid():
+            context.abort(grpc.StatusCode.INVALID_ARGUMENT, form.errors.as_text())
+        user = form.get_user()
+        session = Session.objects.create(
+            user=user,
+            dh_public_key=dh_public_key.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            ),
+            dh_shared_secret=dh_shared_secret,
+        )
+        try:
+            yield sign_message(m.LoginResponse(), self.rsa_private_key, dh_shared_secret)
+            for message in request_iterator:
+                pass
+        finally:
+            session.delete()
 
 
 def grpc_handlers(server):

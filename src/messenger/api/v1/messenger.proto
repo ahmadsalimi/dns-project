@@ -2,10 +2,20 @@ syntax = "proto3";
 
 package v1;
 
-message GetServerPublicKeyRequest {
+message TypedMessage {
+  string type = 1;
+  bytes value = 2;
 }
 
-message GetServerPublicKeyResponse {
+message SignedMessage {
+  TypedMessage message = 1;
+  string signature = 2;
+}
+
+message GetRSAPublicKeyRequest {
+}
+
+message GetRSAPublicKeyResponse {
   string key = 1;
 }
 
@@ -13,22 +23,43 @@ message GetDHParametersRequest {
 }
 
 message GetDHParametersResponse {
-  bytes p = 1;
+  string p = 1;
   int32 g = 2;
-  bytes q = 3;
+  string q = 3;
 }
 
 message GetDHPublicKeyRequest {
 }
 
 message GetDHPublicKeyResponse {
-  bytes y = 1;
+  string y = 1;
+}
+
+message RegisterRequest {
+  string id = 1;
+  string password_ciphertext = 2;
+}
+
+message RegisterResponse {
+}
+
+message LoginRequest {
+  string id = 1;
+  string password_ciphertext = 2;
+  string dh_public_key_y = 3;
+}
+
+message LoginResponse {
 }
 
 service MessengerService {
-  rpc GetPublicKey(GetServerPublicKeyRequest) returns (GetServerPublicKeyResponse);
+  rpc GetRSAPublicKey(GetRSAPublicKeyRequest) returns (GetRSAPublicKeyResponse);
 
-  rpc GetDHParameters(GetDHParametersRequest) returns (GetDHParametersResponse);
+  rpc GetDHParameters(GetDHParametersRequest) returns (SignedMessage);
 
-  rpc GetDHPublicKey(GetDHPublicKeyRequest) returns (GetDHPublicKeyResponse);
+  rpc GetDHPublicKey(GetDHPublicKeyRequest) returns (SignedMessage);
+
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  rpc StartSession(stream TypedMessage) returns (stream SignedMessage);
 }

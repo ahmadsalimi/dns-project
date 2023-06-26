@@ -14,27 +14,37 @@ class MessengerServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetPublicKey = channel.unary_unary(
-                '/v1.MessengerService/GetPublicKey',
-                request_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyRequest.SerializeToString,
-                response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyResponse.FromString,
+        self.GetRSAPublicKey = channel.unary_unary(
+                '/v1.MessengerService/GetRSAPublicKey',
+                request_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetRSAPublicKeyRequest.SerializeToString,
+                response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetRSAPublicKeyResponse.FromString,
                 )
         self.GetDHParameters = channel.unary_unary(
                 '/v1.MessengerService/GetDHParameters',
                 request_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersRequest.SerializeToString,
-                response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersResponse.FromString,
+                response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.FromString,
                 )
         self.GetDHPublicKey = channel.unary_unary(
                 '/v1.MessengerService/GetDHPublicKey',
                 request_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyRequest.SerializeToString,
-                response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyResponse.FromString,
+                response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.FromString,
+                )
+        self.Register = channel.unary_unary(
+                '/v1.MessengerService/Register',
+                request_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.RegisterRequest.SerializeToString,
+                response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.RegisterResponse.FromString,
+                )
+        self.StartSession = channel.stream_stream(
+                '/v1.MessengerService/StartSession',
+                request_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.TypedMessage.SerializeToString,
+                response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.FromString,
                 )
 
 
 class MessengerServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def GetPublicKey(self, request, context):
+    def GetRSAPublicKey(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -52,23 +62,45 @@ class MessengerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Register(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def StartSession(self, request_iterator, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_MessengerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetPublicKey': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetPublicKey,
-                    request_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyRequest.FromString,
-                    response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyResponse.SerializeToString,
+            'GetRSAPublicKey': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetRSAPublicKey,
+                    request_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetRSAPublicKeyRequest.FromString,
+                    response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetRSAPublicKeyResponse.SerializeToString,
             ),
             'GetDHParameters': grpc.unary_unary_rpc_method_handler(
                     servicer.GetDHParameters,
                     request_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersRequest.FromString,
-                    response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersResponse.SerializeToString,
+                    response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.SerializeToString,
             ),
             'GetDHPublicKey': grpc.unary_unary_rpc_method_handler(
                     servicer.GetDHPublicKey,
                     request_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyRequest.FromString,
-                    response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyResponse.SerializeToString,
+                    response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.SerializeToString,
+            ),
+            'Register': grpc.unary_unary_rpc_method_handler(
+                    servicer.Register,
+                    request_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.RegisterRequest.FromString,
+                    response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.RegisterResponse.SerializeToString,
+            ),
+            'StartSession': grpc.stream_stream_rpc_method_handler(
+                    servicer.StartSession,
+                    request_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.TypedMessage.FromString,
+                    response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -81,7 +113,7 @@ class MessengerService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def GetPublicKey(request,
+    def GetRSAPublicKey(request,
             target,
             options=(),
             channel_credentials=None,
@@ -91,9 +123,9 @@ class MessengerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/v1.MessengerService/GetPublicKey',
-            messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyRequest.SerializeToString,
-            messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/v1.MessengerService/GetRSAPublicKey',
+            messenger_dot_api_dot_v1_dot_messenger__pb2.GetRSAPublicKeyRequest.SerializeToString,
+            messenger_dot_api_dot_v1_dot_messenger__pb2.GetRSAPublicKeyResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -110,7 +142,7 @@ class MessengerService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/v1.MessengerService/GetDHParameters',
             messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersRequest.SerializeToString,
-            messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersResponse.FromString,
+            messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -127,6 +159,40 @@ class MessengerService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/v1.MessengerService/GetDHPublicKey',
             messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyRequest.SerializeToString,
-            messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyResponse.FromString,
+            messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Register(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/v1.MessengerService/Register',
+            messenger_dot_api_dot_v1_dot_messenger__pb2.RegisterRequest.SerializeToString,
+            messenger_dot_api_dot_v1_dot_messenger__pb2.RegisterResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def StartSession(request_iterator,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.stream_stream(request_iterator, target, '/v1.MessengerService/StartSession',
+            messenger_dot_api_dot_v1_dot_messenger__pb2.TypedMessage.SerializeToString,
+            messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
