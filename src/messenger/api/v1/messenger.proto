@@ -9,6 +9,26 @@ message GetServerPublicKeyResponse {
   string key = 1;
 }
 
+message GetDHParametersRequest {
+}
+
+message GetDHParametersResponse {
+  bytes p = 1;
+  int32 g = 2;
+  bytes q = 3;
+}
+
+message GetDHPublicKeyRequest {
+}
+
+message GetDHPublicKeyResponse {
+  bytes y = 1;
+}
+
 service MessengerService {
   rpc GetPublicKey(GetServerPublicKeyRequest) returns (GetServerPublicKeyResponse);
+
+  rpc GetDHParameters(GetDHParametersRequest) returns (GetDHParametersResponse);
+
+  rpc GetDHPublicKey(GetDHPublicKeyRequest) returns (GetDHPublicKeyResponse);
 }

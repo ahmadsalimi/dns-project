@@ -19,12 +19,34 @@ class MessengerServiceStub(object):
                 request_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyRequest.SerializeToString,
                 response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyResponse.FromString,
                 )
+        self.GetDHParameters = channel.unary_unary(
+                '/v1.MessengerService/GetDHParameters',
+                request_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersRequest.SerializeToString,
+                response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersResponse.FromString,
+                )
+        self.GetDHPublicKey = channel.unary_unary(
+                '/v1.MessengerService/GetDHPublicKey',
+                request_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyRequest.SerializeToString,
+                response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyResponse.FromString,
+                )
 
 
 class MessengerServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetPublicKey(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetDHParameters(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetDHPublicKey(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -37,6 +59,16 @@ def add_MessengerServiceServicer_to_server(servicer, server):
                     servicer.GetPublicKey,
                     request_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyRequest.FromString,
                     response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyResponse.SerializeToString,
+            ),
+            'GetDHParameters': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetDHParameters,
+                    request_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersRequest.FromString,
+                    response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersResponse.SerializeToString,
+            ),
+            'GetDHPublicKey': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetDHPublicKey,
+                    request_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyRequest.FromString,
+                    response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -62,5 +94,39 @@ class MessengerService(object):
         return grpc.experimental.unary_unary(request, target, '/v1.MessengerService/GetPublicKey',
             messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyRequest.SerializeToString,
             messenger_dot_api_dot_v1_dot_messenger__pb2.GetServerPublicKeyResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetDHParameters(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/v1.MessengerService/GetDHParameters',
+            messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersRequest.SerializeToString,
+            messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHParametersResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetDHPublicKey(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/v1.MessengerService/GetDHPublicKey',
+            messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyRequest.SerializeToString,
+            messenger_dot_api_dot_v1_dot_messenger__pb2.GetDHPublicKeyResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

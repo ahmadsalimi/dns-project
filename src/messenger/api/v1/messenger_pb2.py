@@ -14,12 +14,16 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n messenger/api/v1/messenger.proto\x12\x02v1\"\x1b\n\x19GetServerPublicKeyRequest\")\n\x1aGetServerPublicKeyResponse\x12\x0b\n\x03key\x18\x01 \x01(\t2a\n\x10MessengerService\x12M\n\x0cGetPublicKey\x12\x1d.v1.GetServerPublicKeyRequest\x1a\x1e.v1.GetServerPublicKeyResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n messenger/api/v1/messenger.proto\x12\x02v1\"\x1b\n\x19GetServerPublicKeyRequest\")\n\x1aGetServerPublicKeyResponse\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x18\n\x16GetDHParametersRequest\":\n\x17GetDHParametersResponse\x12\t\n\x01p\x18\x01 \x01(\x0c\x12\t\n\x01g\x18\x02 \x01(\x05\x12\t\n\x01q\x18\x03 \x01(\x0c\"\x17\n\x15GetDHPublicKeyRequest\"#\n\x16GetDHPublicKeyResponse\x12\t\n\x01y\x18\x01 \x01(\x0c\x32\xf6\x01\n\x10MessengerService\x12M\n\x0cGetPublicKey\x12\x1d.v1.GetServerPublicKeyRequest\x1a\x1e.v1.GetServerPublicKeyResponse\x12J\n\x0fGetDHParameters\x12\x1a.v1.GetDHParametersRequest\x1a\x1b.v1.GetDHParametersResponse\x12G\n\x0eGetDHPublicKey\x12\x19.v1.GetDHPublicKeyRequest\x1a\x1a.v1.GetDHPublicKeyResponseb\x06proto3')
 
 
 
 _GETSERVERPUBLICKEYREQUEST = DESCRIPTOR.message_types_by_name['GetServerPublicKeyRequest']
 _GETSERVERPUBLICKEYRESPONSE = DESCRIPTOR.message_types_by_name['GetServerPublicKeyResponse']
+_GETDHPARAMETERSREQUEST = DESCRIPTOR.message_types_by_name['GetDHParametersRequest']
+_GETDHPARAMETERSRESPONSE = DESCRIPTOR.message_types_by_name['GetDHParametersResponse']
+_GETDHPUBLICKEYREQUEST = DESCRIPTOR.message_types_by_name['GetDHPublicKeyRequest']
+_GETDHPUBLICKEYRESPONSE = DESCRIPTOR.message_types_by_name['GetDHPublicKeyResponse']
 GetServerPublicKeyRequest = _reflection.GeneratedProtocolMessageType('GetServerPublicKeyRequest', (_message.Message,), {
   'DESCRIPTOR' : _GETSERVERPUBLICKEYREQUEST,
   '__module__' : 'messenger.api.v1.messenger_pb2'
@@ -34,6 +38,34 @@ GetServerPublicKeyResponse = _reflection.GeneratedProtocolMessageType('GetServer
   })
 _sym_db.RegisterMessage(GetServerPublicKeyResponse)
 
+GetDHParametersRequest = _reflection.GeneratedProtocolMessageType('GetDHParametersRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETDHPARAMETERSREQUEST,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.GetDHParametersRequest)
+  })
+_sym_db.RegisterMessage(GetDHParametersRequest)
+
+GetDHParametersResponse = _reflection.GeneratedProtocolMessageType('GetDHParametersResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETDHPARAMETERSRESPONSE,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.GetDHParametersResponse)
+  })
+_sym_db.RegisterMessage(GetDHParametersResponse)
+
+GetDHPublicKeyRequest = _reflection.GeneratedProtocolMessageType('GetDHPublicKeyRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETDHPUBLICKEYREQUEST,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.GetDHPublicKeyRequest)
+  })
+_sym_db.RegisterMessage(GetDHPublicKeyRequest)
+
+GetDHPublicKeyResponse = _reflection.GeneratedProtocolMessageType('GetDHPublicKeyResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETDHPUBLICKEYRESPONSE,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.GetDHPublicKeyResponse)
+  })
+_sym_db.RegisterMessage(GetDHPublicKeyResponse)
+
 _MESSENGERSERVICE = DESCRIPTOR.services_by_name['MessengerService']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
@@ -42,6 +74,14 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _GETSERVERPUBLICKEYREQUEST._serialized_end=67
   _GETSERVERPUBLICKEYRESPONSE._serialized_start=69
   _GETSERVERPUBLICKEYRESPONSE._serialized_end=110
-  _MESSENGERSERVICE._serialized_start=112
-  _MESSENGERSERVICE._serialized_end=209
+  _GETDHPARAMETERSREQUEST._serialized_start=112
+  _GETDHPARAMETERSREQUEST._serialized_end=136
+  _GETDHPARAMETERSRESPONSE._serialized_start=138
+  _GETDHPARAMETERSRESPONSE._serialized_end=196
+  _GETDHPUBLICKEYREQUEST._serialized_start=198
+  _GETDHPUBLICKEYREQUEST._serialized_end=221
+  _GETDHPUBLICKEYRESPONSE._serialized_start=223
+  _GETDHPUBLICKEYRESPONSE._serialized_end=258
+  _MESSENGERSERVICE._serialized_start=261
+  _MESSENGERSERVICE._serialized_end=507
 # @@protoc_insertion_point(module_scope)
