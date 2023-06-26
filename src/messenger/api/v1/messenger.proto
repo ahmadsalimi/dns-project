@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package v1;
+
+message GetServerPublicKeyRequest {
+}
+
+message GetServerPublicKeyResponse {
+  string key = 1;
+}
+
+service MessengerService {
+  rpc GetPublicKey(GetServerPublicKeyRequest) returns (GetServerPublicKeyResponse);
+}
