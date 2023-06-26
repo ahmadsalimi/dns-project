@@ -11,7 +11,8 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from messenger.api.v1 import messenger_pb2 as m
 from messenger.api.v1.messenger_pb2_grpc import MessengerServiceServicer, add_MessengerServiceServicer_to_server
 from messenger.models import Configuration, ServerKey, Session
-from messenger.utils import num2bytes, sha256_hash, sign_message, decrypt_rsa, parse_typed_message, decrypt_aes
+from messenger.utils import num2bytes, sha256_hash, sign_message, decrypt_rsa, parse_typed_message, decrypt_aes, \
+    isoftype
 
 
 class MessengerService(MessengerServiceServicer):
@@ -109,7 +110,7 @@ class MessengerService(MessengerServiceServicer):
     def Register(self, request: m.RegisterRequest,
                  context: grpc.ServicerContext) -> m.RegisterResponse:
         id_ = request.id
-        password = decrypt_rsa(request.password_ciphertext, self.rsa_private_key)
+        password = decrypt_rsa(bytes.fromhex(request.password_ciphertext), self.rsa_private_key).decode()
         form = UserCreationForm(dict(
             username=id_,
             password1=password,
@@ -123,7 +124,7 @@ class MessengerService(MessengerServiceServicer):
     def StartSession(self, request_iterator: Iterator[m.TypedMessage],
                      context: grpc.ServicerContext) -> Iterator[m.SignedMessage]:
         m1 = next(request_iterator)
-        if m1.type != m.LoginRequest.DESCRIPTOR.name:
+        if not isoftype(m1, m.LoginRequest):
             context.abort(grpc.StatusCode.INVALID_ARGUMENT,
                           f'Expected {m.LoginRequest.DESCRIPTOR.name}, got {m1.type}')
         login_request = parse_typed_message(m1)
@@ -152,11 +153,15 @@ class MessengerService(MessengerServiceServicer):
         try:
             yield sign_message(m.LoginResponse(), self.rsa_private_key, dh_shared_secret)
             for message in request_iterator:
-                if message.type == m.EchoMessage.DESCRIPTOR.name:
+                if isoftype(message, m.EchoMessage):
                     message.value = decrypt_aes(message.value, dh_shared_secret)
                     echo_message = parse_typed_message(message)
                     yield sign_message(m.EchoMessage(message=echo_message.message), self.rsa_private_key,
                                        dh_shared_secret)
+                elif isoftype(message, m.ListOnlineUsersRequest):
+                    yield sign_message(m.ListOnlineUsersResponse(
+                        user_ids=[s.user.username for s in Session.objects.all()]
+                    ), self.rsa_private_key, dh_shared_secret)
         finally:
             session.delete()
 

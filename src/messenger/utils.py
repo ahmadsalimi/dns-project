@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Type
 
 import google.protobuf.message
 from cryptography.hazmat.backends import default_backend
@@ -115,3 +115,7 @@ def parse_signed_message(signed_message: m.SignedMessage, public_key: rsa.RSAPub
     signed_message.message.value = message_bytes
     verify_signature(message_bytes, signed_message.signature, public_key)
     return parse_typed_message(signed_message.message)
+
+
+def isoftype(message: m.TypedMessage, type: Type[google.protobuf.message.Message]) -> bool:
+    return message.type == type.DESCRIPTOR.name

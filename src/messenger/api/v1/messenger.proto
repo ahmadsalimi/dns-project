@@ -56,6 +56,13 @@ message EchoMessage {
   string message = 1;
 }
 
+message ListOnlineUsersRequest {
+}
+
+message ListOnlineUsersResponse {
+  repeated string user_ids = 1;
+}
+
 service MessengerService {
   rpc GetRSAPublicKey(GetRSAPublicKeyRequest) returns (GetRSAPublicKeyResponse);
 
