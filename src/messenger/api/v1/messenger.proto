@@ -63,6 +63,29 @@ message ListOnlineUsersResponse {
   repeated string user_ids = 1;
 }
 
+message ChatRequestFromClient {
+  string requestee = 1;
+}
+
+message ChatRequestFromServer {
+  string request_id = 1;
+  string requester = 2;
+  string dh_public_key_y = 3;
+}
+
+message ChatRequestFromServerResponse {
+  string request_id = 1;
+  bool accepted = 2;
+}
+
+message ChatRequestFromClientResponse {
+  bool accepted = 1;
+  oneof result {
+    string error = 2;
+    string dh_public_key_y = 3;
+  }
+}
+
 service MessengerService {
   rpc GetRSAPublicKey(GetRSAPublicKeyRequest) returns (GetRSAPublicKeyResponse);
 

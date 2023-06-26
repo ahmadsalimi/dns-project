@@ -1,6 +1,9 @@
 import uuid
 from typing import Optional
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import dh
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from django.db import models
 
 from messenger.utils import sha256_hash
@@ -69,8 +72,8 @@ class ServerKey(models.Model):
 
 
 class Session(models.Model):
-    id = models.CharField(max_length=256, unique=True, primary_key=True, default=uuid.uuid4)
-    user = models.OneToOneField('auth.User', on_delete=models.CASCADE)
+    id = models.UUIDField(unique=True, primary_key=True, default=uuid.uuid4)
+    user = models.OneToOneField('auth.User', on_delete=models.CASCADE, related_name='session')
     dh_public_key = models.BinaryField()
     dh_shared_secret = models.BinaryField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -83,3 +86,22 @@ class Session(models.Model):
     @property
     def shared_secret_signature(self) -> str:
         return sha256_hash(self.dh_shared_secret).hex()
+
+    @property
+    def parsed_dh_public_key(self) -> dh.DHPublicKey:
+        return load_pem_public_key(self.dh_public_key, default_backend())
+
+
+class ChatRequest(models.Model):
+    id = models.UUIDField(unique=True, primary_key=True, default=uuid.uuid4)
+    requester = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='chat_requests_sent')
+    requestee = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='chat_requests_received')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Status(models.TextChoices):
+        PENDING = 'PENDING'
+        ACCEPTED = 'ACCEPTED'
+        REJECTED = 'REJECTED'
+
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)

@@ -136,6 +136,7 @@ JET_SIDE_MENU_CUSTOM_APPS = [
         'Configuration',
         'ServerKey',
         'Session',
+        'ChatRequest',
     ]),
     ('auth', [
         'User',

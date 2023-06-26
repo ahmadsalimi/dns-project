@@ -1,3 +1,5 @@
+import queue
+import threading
 from functools import cached_property
 from typing import Iterator
 
@@ -8,10 +10,11 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, dh
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_parameters
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
 
 from messenger.api.v1 import messenger_pb2 as m
 from messenger.api.v1.messenger_pb2_grpc import MessengerServiceServicer, add_MessengerServiceServicer_to_server
-from messenger.models import Configuration, ServerKey, Session
+from messenger.models import Configuration, ServerKey, Session, ChatRequest
 from messenger.utils import num2bytes, sha256_hash, sign_message, decrypt_rsa, parse_typed_message, decrypt_aes, \
     isoftype
 
@@ -20,6 +23,10 @@ class MessengerService(MessengerServiceServicer):
     SERVER_RSA_PRV_KEY_NAME = 'server_rsa_prv_key'
     DH_PARAMETERS_NAME = 'dh_parameters'
     SERVER_DH_PRV_KEY_NAME = 'server_dh_prv_key'
+
+    def __init__(self):
+        self.__lock = threading.Lock()
+        self.__response_queues = {}
 
     def ensure_rsa_key(self):
         if ServerKey.exists(self.SERVER_RSA_PRV_KEY_NAME):
@@ -151,23 +158,84 @@ class MessengerService(MessengerServiceServicer):
             ),
             dh_shared_secret=dh_shared_secret,
         )
+        self.__response_queues[user.username] = response_queue = queue.Queue()
+        handle_session_requests_thread = threading.Thread(
+            target=self.__handle_session_requests,
+            args=(request_iterator, response_queue, dh_shared_secret, user),
+        )
+        handle_session_requests_thread.start()
         try:
             yield sign_message(m.LoginResponse(), self.rsa_private_key, dh_shared_secret)
-            for message in request_iterator:
-                message.value = decrypt_aes(message.value, dh_shared_secret)
-                request = parse_typed_message(message)
-                response = self.__handle_session_request(request)
+            while (response := response_queue.get()) is not None:
                 yield sign_message(response, self.rsa_private_key, dh_shared_secret)
         finally:
             session.delete()
 
-    def __handle_session_request(self, request: google.protobuf.message.Message) -> google.protobuf.message.Message:
+    def __handle_session_requests(self, request_iterator: Iterator[m.TypedMessage],
+                                  response_queue: queue.Queue,
+                                  dh_shared_secret: bytes,
+                                  user: User) -> None:
+        try:
+            for message in request_iterator:
+                message.value = decrypt_aes(message.value, dh_shared_secret)
+                request = parse_typed_message(message)
+                response = self.__handle_session_request(request, user)
+                if response is None:
+                    continue
+                response_queue.put(response)
+        finally:
+            response_queue.put(None)
+
+    def __handle_session_request(self, request: google.protobuf.message.Message,
+                                 user: User) -> google.protobuf.message.Message:
         if request.DESCRIPTOR.name == m.EchoMessage.DESCRIPTOR.name:
             return m.EchoMessage(message=request.message)
         elif request.DESCRIPTOR.name == m.ListOnlineUsersRequest.DESCRIPTOR.name:
             return m.ListOnlineUsersResponse(user_ids=[s.user.username for s in Session.objects.all()])
         elif request.DESCRIPTOR.name == m.ChatRequestFromClient.DESCRIPTOR.name:
-            pass
+            # user = requester
+            if user.username == request.requestee:
+                return m.ChatRequestFromClientResponse(
+                    accepted=False,
+                    error='Cannot send a chat request to yourself',
+                )
+            if not Session.objects.filter(user__username=request.requestee).exists():
+                return m.ChatRequestFromClientResponse(
+                    accepted=False,
+                    error=f'User {request.requestee} either does not exist or is offline',
+                )
+            chat_request = ChatRequest.objects.create(
+                requester=user,
+                requestee=User.objects.get(username=request.requestee),
+            )
+            self.__response_queues[request.requestee].put(m.ChatRequestFromServer(
+                request_id=str(chat_request.id),
+                requester=user.username,
+                dh_public_key_y=num2bytes(user.session.parsed_dh_public_key.public_numbers().y).hex(),
+            ))
+            return
+        elif request.DESCRIPTOR.name == m.ChatRequestFromServerResponse.DESCRIPTOR.name:
+            # user = requestee
+            if not ChatRequest.objects.filter(id=request.request_id).exists():
+                return
+            chat_request = ChatRequest.objects.get(id=request.request_id)
+            if chat_request.requestee != user:
+                return
+            if not request.accepted:
+                self.__response_queues[chat_request.requester.username].put(m.ChatRequestFromClientResponse(
+                    accepted=False,
+                    error=f'User {user.username} rejected your chat request',
+                ))
+                chat_request.status = ChatRequest.Status.REJECTED
+                chat_request.save()
+                return
+            self.__response_queues[chat_request.requester.username].put(m.ChatRequestFromClientResponse(
+                accepted=True,
+                dh_public_key_y=num2bytes(user.session.parsed_dh_public_key.public_numbers().y).hex(),
+            ))
+            chat_request.status = ChatRequest.Status.ACCEPTED
+            chat_request.save()
+            return
 
 
 def grpc_handlers(server):

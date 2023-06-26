@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n messenger/api/v1/messenger.proto\x12\x02v1\"+\n\x0cTypedMessage\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x0c\"E\n\rSignedMessage\x12!\n\x07message\x18\x01 \x01(\x0b\x32\x10.v1.TypedMessage\x12\x11\n\tsignature\x18\x02 \x01(\t\"\x18\n\x16GetRSAPublicKeyRequest\"&\n\x17GetRSAPublicKeyResponse\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x18\n\x16GetDHParametersRequest\":\n\x17GetDHParametersResponse\x12\t\n\x01p\x18\x01 \x01(\t\x12\t\n\x01g\x18\x02 \x01(\x05\x12\t\n\x01q\x18\x03 \x01(\t\"\x17\n\x15GetDHPublicKeyRequest\"#\n\x16GetDHPublicKeyResponse\x12\t\n\x01y\x18\x01 \x01(\t\":\n\x0fRegisterRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\"\x12\n\x10RegisterResponse\"P\n\x0cLoginRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\"\x0f\n\rLoginResponse\"\x1e\n\x0b\x45\x63hoMessage\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x18\n\x16ListOnlineUsersRequest\"+\n\x17ListOnlineUsersResponse\x12\x10\n\x08user_ids\x18\x01 \x03(\t2\xd0\x02\n\x10MessengerService\x12J\n\x0fGetRSAPublicKey\x12\x1a.v1.GetRSAPublicKeyRequest\x1a\x1b.v1.GetRSAPublicKeyResponse\x12@\n\x0fGetDHParameters\x12\x1a.v1.GetDHParametersRequest\x1a\x11.v1.SignedMessage\x12>\n\x0eGetDHPublicKey\x12\x19.v1.GetDHPublicKeyRequest\x1a\x11.v1.SignedMessage\x12\x35\n\x08Register\x12\x13.v1.RegisterRequest\x1a\x14.v1.RegisterResponse\x12\x37\n\x0cStartSession\x12\x10.v1.TypedMessage\x1a\x11.v1.SignedMessage(\x01\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n messenger/api/v1/messenger.proto\x12\x02v1\"+\n\x0cTypedMessage\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x0c\"E\n\rSignedMessage\x12!\n\x07message\x18\x01 \x01(\x0b\x32\x10.v1.TypedMessage\x12\x11\n\tsignature\x18\x02 \x01(\t\"\x18\n\x16GetRSAPublicKeyRequest\"&\n\x17GetRSAPublicKeyResponse\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x18\n\x16GetDHParametersRequest\":\n\x17GetDHParametersResponse\x12\t\n\x01p\x18\x01 \x01(\t\x12\t\n\x01g\x18\x02 \x01(\x05\x12\t\n\x01q\x18\x03 \x01(\t\"\x17\n\x15GetDHPublicKeyRequest\"#\n\x16GetDHPublicKeyResponse\x12\t\n\x01y\x18\x01 \x01(\t\":\n\x0fRegisterRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\"\x12\n\x10RegisterResponse\"P\n\x0cLoginRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\"\x0f\n\rLoginResponse\"\x1e\n\x0b\x45\x63hoMessage\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x18\n\x16ListOnlineUsersRequest\"+\n\x17ListOnlineUsersResponse\x12\x10\n\x08user_ids\x18\x01 \x03(\t\"*\n\x15\x43hatRequestFromClient\x12\x11\n\trequestee\x18\x01 \x01(\t\"W\n\x15\x43hatRequestFromServer\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x11\n\trequester\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\"E\n\x1d\x43hatRequestFromServerResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x02 \x01(\x08\"g\n\x1d\x43hatRequestFromClientResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x05\x65rror\x18\x02 \x01(\tH\x00\x12\x19\n\x0f\x64h_public_key_y\x18\x03 \x01(\tH\x00\x42\x08\n\x06result2\xd0\x02\n\x10MessengerService\x12J\n\x0fGetRSAPublicKey\x12\x1a.v1.GetRSAPublicKeyRequest\x1a\x1b.v1.GetRSAPublicKeyResponse\x12@\n\x0fGetDHParameters\x12\x1a.v1.GetDHParametersRequest\x1a\x11.v1.SignedMessage\x12>\n\x0eGetDHPublicKey\x12\x19.v1.GetDHPublicKeyRequest\x1a\x11.v1.SignedMessage\x12\x35\n\x08Register\x12\x13.v1.RegisterRequest\x1a\x14.v1.RegisterResponse\x12\x37\n\x0cStartSession\x12\x10.v1.TypedMessage\x1a\x11.v1.SignedMessage(\x01\x30\x01\x62\x06proto3')
 
 
 
@@ -33,6 +33,10 @@ _LOGINRESPONSE = DESCRIPTOR.message_types_by_name['LoginResponse']
 _ECHOMESSAGE = DESCRIPTOR.message_types_by_name['EchoMessage']
 _LISTONLINEUSERSREQUEST = DESCRIPTOR.message_types_by_name['ListOnlineUsersRequest']
 _LISTONLINEUSERSRESPONSE = DESCRIPTOR.message_types_by_name['ListOnlineUsersResponse']
+_CHATREQUESTFROMCLIENT = DESCRIPTOR.message_types_by_name['ChatRequestFromClient']
+_CHATREQUESTFROMSERVER = DESCRIPTOR.message_types_by_name['ChatRequestFromServer']
+_CHATREQUESTFROMSERVERRESPONSE = DESCRIPTOR.message_types_by_name['ChatRequestFromServerResponse']
+_CHATREQUESTFROMCLIENTRESPONSE = DESCRIPTOR.message_types_by_name['ChatRequestFromClientResponse']
 TypedMessage = _reflection.GeneratedProtocolMessageType('TypedMessage', (_message.Message,), {
   'DESCRIPTOR' : _TYPEDMESSAGE,
   '__module__' : 'messenger.api.v1.messenger_pb2'
@@ -138,6 +142,34 @@ ListOnlineUsersResponse = _reflection.GeneratedProtocolMessageType('ListOnlineUs
   })
 _sym_db.RegisterMessage(ListOnlineUsersResponse)
 
+ChatRequestFromClient = _reflection.GeneratedProtocolMessageType('ChatRequestFromClient', (_message.Message,), {
+  'DESCRIPTOR' : _CHATREQUESTFROMCLIENT,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.ChatRequestFromClient)
+  })
+_sym_db.RegisterMessage(ChatRequestFromClient)
+
+ChatRequestFromServer = _reflection.GeneratedProtocolMessageType('ChatRequestFromServer', (_message.Message,), {
+  'DESCRIPTOR' : _CHATREQUESTFROMSERVER,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.ChatRequestFromServer)
+  })
+_sym_db.RegisterMessage(ChatRequestFromServer)
+
+ChatRequestFromServerResponse = _reflection.GeneratedProtocolMessageType('ChatRequestFromServerResponse', (_message.Message,), {
+  'DESCRIPTOR' : _CHATREQUESTFROMSERVERRESPONSE,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.ChatRequestFromServerResponse)
+  })
+_sym_db.RegisterMessage(ChatRequestFromServerResponse)
+
+ChatRequestFromClientResponse = _reflection.GeneratedProtocolMessageType('ChatRequestFromClientResponse', (_message.Message,), {
+  'DESCRIPTOR' : _CHATREQUESTFROMCLIENTRESPONSE,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.ChatRequestFromClientResponse)
+  })
+_sym_db.RegisterMessage(ChatRequestFromClientResponse)
+
 _MESSENGERSERVICE = DESCRIPTOR.services_by_name['MessengerService']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
@@ -172,6 +204,14 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _LISTONLINEUSERSREQUEST._serialized_end=605
   _LISTONLINEUSERSRESPONSE._serialized_start=607
   _LISTONLINEUSERSRESPONSE._serialized_end=650
-  _MESSENGERSERVICE._serialized_start=653
-  _MESSENGERSERVICE._serialized_end=989
+  _CHATREQUESTFROMCLIENT._serialized_start=652
+  _CHATREQUESTFROMCLIENT._serialized_end=694
+  _CHATREQUESTFROMSERVER._serialized_start=696
+  _CHATREQUESTFROMSERVER._serialized_end=783
+  _CHATREQUESTFROMSERVERRESPONSE._serialized_start=785
+  _CHATREQUESTFROMSERVERRESPONSE._serialized_end=854
+  _CHATREQUESTFROMCLIENTRESPONSE._serialized_start=856
+  _CHATREQUESTFROMCLIENTRESPONSE._serialized_end=959
+  _MESSENGERSERVICE._serialized_start=962
+  _MESSENGERSERVICE._serialized_end=1298
 # @@protoc_insertion_point(module_scope)
