@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n messenger/api/v1/messenger.proto\x12\x02v1\"+\n\x0cTypedMessage\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x0c\"E\n\rSignedMessage\x12!\n\x07message\x18\x01 \x01(\x0b\x32\x10.v1.TypedMessage\x12\x11\n\tsignature\x18\x02 \x01(\t\"\x18\n\x16GetRSAPublicKeyRequest\"&\n\x17GetRSAPublicKeyResponse\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x18\n\x16GetDHParametersRequest\":\n\x17GetDHParametersResponse\x12\t\n\x01p\x18\x01 \x01(\t\x12\t\n\x01g\x18\x02 \x01(\x05\x12\t\n\x01q\x18\x03 \x01(\t\"\x17\n\x15GetDHPublicKeyRequest\"#\n\x16GetDHPublicKeyResponse\x12\t\n\x01y\x18\x01 \x01(\t\":\n\x0fRegisterRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\"\x12\n\x10RegisterResponse\"P\n\x0cLoginRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\"\x0f\n\rLoginResponse\"\x1e\n\x0b\x45\x63hoMessage\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x18\n\x16ListOnlineUsersRequest\"+\n\x17ListOnlineUsersResponse\x12\x10\n\x08user_ids\x18\x01 \x03(\t\"*\n\x15\x43hatRequestFromClient\x12\x11\n\trequestee\x18\x01 \x01(\t\"W\n\x15\x43hatRequestFromServer\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x11\n\trequester\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\"E\n\x1d\x43hatRequestFromServerResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x02 \x01(\x08\"g\n\x1d\x43hatRequestFromClientResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x05\x65rror\x18\x02 \x01(\tH\x00\x12\x19\n\x0f\x64h_public_key_y\x18\x03 \x01(\tH\x00\x42\x08\n\x06result\"F\n\x13\x43hatMessageToServer\x12\x13\n\x0b\x64\x65stination\x18\x01 \x01(\t\x12\x1a\n\x12message_ciphertext\x18\x02 \x01(\t\"A\n\x13\x43hatMessageToClient\x12\x0e\n\x06source\x18\x01 \x01(\t\x12\x1a\n\x12message_ciphertext\x18\x02 \x01(\t\"6\n\x1bRefreshDHKeyRequestToServer\x12\x17\n\x0f\x64h_public_key_y\x18\x01 \x01(\t\"I\n\x1bRefreshDHKeyRequestToClient\x12\x11\n\trequester\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t2\xd0\x02\n\x10MessengerService\x12J\n\x0fGetRSAPublicKey\x12\x1a.v1.GetRSAPublicKeyRequest\x1a\x1b.v1.GetRSAPublicKeyResponse\x12@\n\x0fGetDHParameters\x12\x1a.v1.GetDHParametersRequest\x1a\x11.v1.SignedMessage\x12>\n\x0eGetDHPublicKey\x12\x19.v1.GetDHPublicKeyRequest\x1a\x11.v1.SignedMessage\x12\x35\n\x08Register\x12\x13.v1.RegisterRequest\x1a\x14.v1.RegisterResponse\x12\x37\n\x0cStartSession\x12\x10.v1.TypedMessage\x1a\x11.v1.SignedMessage(\x01\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n messenger/api/v1/messenger.proto\x12\x02v1\"?\n\x0cTypedMessage\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\x0c\"Y\n\rSignedMessage\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12!\n\x07message\x18\x02 \x01(\x0b\x32\x10.v1.TypedMessage\x12\x11\n\tsignature\x18\x03 \x01(\t\"\x18\n\x16GetRSAPublicKeyRequest\"&\n\x17GetRSAPublicKeyResponse\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x18\n\x16GetDHParametersRequest\":\n\x17GetDHParametersResponse\x12\t\n\x01p\x18\x01 \x01(\t\x12\t\n\x01g\x18\x02 \x01(\x05\x12\t\n\x01q\x18\x03 \x01(\t\"\x17\n\x15GetDHPublicKeyRequest\"#\n\x16GetDHPublicKeyResponse\x12\t\n\x01y\x18\x01 \x01(\t\":\n\x0fRegisterRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\"\x12\n\x10RegisterResponse\"P\n\x0cLoginRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\"\x0f\n\rLoginResponse\"\x1e\n\x0b\x45\x63hoMessage\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x18\n\x16ListOnlineUsersRequest\"+\n\x17ListOnlineUsersResponse\x12\x10\n\x08user_ids\x18\x01 \x03(\t\"*\n\x15\x43hatRequestFromClient\x12\x11\n\trequestee\x18\x01 \x01(\t\"C\n\x15\x43hatRequestFromServer\x12\x11\n\trequester\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\"1\n\x1d\x43hatRequestFromServerResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x02 \x01(\x08\"g\n\x1d\x43hatRequestFromClientResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x05\x65rror\x18\x02 \x01(\tH\x00\x12\x19\n\x0f\x64h_public_key_y\x18\x03 \x01(\tH\x00\x42\x08\n\x06result\"F\n\x13\x43hatMessageToServer\x12\x13\n\x0b\x64\x65stination\x18\x01 \x01(\t\x12\x1a\n\x12message_ciphertext\x18\x02 \x01(\t\"A\n\x13\x43hatMessageToClient\x12\x0e\n\x06source\x18\x01 \x01(\t\x12\x1a\n\x12message_ciphertext\x18\x02 \x01(\t\"6\n\x1bRefreshDHKeyRequestToServer\x12\x17\n\x0f\x64h_public_key_y\x18\x01 \x01(\t\"I\n\x1bRefreshDHKeyRequestToClient\x12\x11\n\trequester\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\" \n\x12\x43reateGroupRequest\x12\n\n\x02id\x18\x01 \x01(\t\"8\n\x13\x43reateGroupResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x03 \x01(\t\"\x13\n\x11ListGroupsRequest\"@\n\x05Group\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07members\x18\x02 \x03(\t\x12\x1a\n\x12is_requester_admin\x18\x03 \x01(\x08\"/\n\x12ListGroupsResponse\x12\x19\n\x06groups\x18\x01 \x03(\x0b\x32\t.v1.Group\"&\n\x13GetPublicKeyRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\"R\n\x14GetPublicKeyResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\x17\n\x0f\x64h_public_key_y\x18\x02 \x01(\t\x12\r\n\x05\x65rror\x18\x03 \x01(\t\"B\n\x1d\x41\x64\x64GroupMemberRequestToServer\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\";\n\x16\x41\x64\x64GroupMemberResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"9\n\x1d\x41\x64\x64GroupMemberRequestToClient\x12\x18\n\x05group\x18\x01 \x01(\x0b\x32\t.v1.Group\"B\n\x1d\x41\x64\x64NewGroupMemberNotification\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t2\xd0\x02\n\x10MessengerService\x12J\n\x0fGetRSAPublicKey\x12\x1a.v1.GetRSAPublicKeyRequest\x1a\x1b.v1.GetRSAPublicKeyResponse\x12@\n\x0fGetDHParameters\x12\x1a.v1.GetDHParametersRequest\x1a\x11.v1.SignedMessage\x12>\n\x0eGetDHPublicKey\x12\x19.v1.GetDHPublicKeyRequest\x1a\x11.v1.SignedMessage\x12\x35\n\x08Register\x12\x13.v1.RegisterRequest\x1a\x14.v1.RegisterResponse\x12\x37\n\x0cStartSession\x12\x10.v1.TypedMessage\x1a\x11.v1.SignedMessage(\x01\x30\x01\x62\x06proto3')
 
 
 
@@ -41,6 +41,17 @@ _CHATMESSAGETOSERVER = DESCRIPTOR.message_types_by_name['ChatMessageToServer']
 _CHATMESSAGETOCLIENT = DESCRIPTOR.message_types_by_name['ChatMessageToClient']
 _REFRESHDHKEYREQUESTTOSERVER = DESCRIPTOR.message_types_by_name['RefreshDHKeyRequestToServer']
 _REFRESHDHKEYREQUESTTOCLIENT = DESCRIPTOR.message_types_by_name['RefreshDHKeyRequestToClient']
+_CREATEGROUPREQUEST = DESCRIPTOR.message_types_by_name['CreateGroupRequest']
+_CREATEGROUPRESPONSE = DESCRIPTOR.message_types_by_name['CreateGroupResponse']
+_LISTGROUPSREQUEST = DESCRIPTOR.message_types_by_name['ListGroupsRequest']
+_GROUP = DESCRIPTOR.message_types_by_name['Group']
+_LISTGROUPSRESPONSE = DESCRIPTOR.message_types_by_name['ListGroupsResponse']
+_GETPUBLICKEYREQUEST = DESCRIPTOR.message_types_by_name['GetPublicKeyRequest']
+_GETPUBLICKEYRESPONSE = DESCRIPTOR.message_types_by_name['GetPublicKeyResponse']
+_ADDGROUPMEMBERREQUESTTOSERVER = DESCRIPTOR.message_types_by_name['AddGroupMemberRequestToServer']
+_ADDGROUPMEMBERRESPONSE = DESCRIPTOR.message_types_by_name['AddGroupMemberResponse']
+_ADDGROUPMEMBERREQUESTTOCLIENT = DESCRIPTOR.message_types_by_name['AddGroupMemberRequestToClient']
+_ADDNEWGROUPMEMBERNOTIFICATION = DESCRIPTOR.message_types_by_name['AddNewGroupMemberNotification']
 TypedMessage = _reflection.GeneratedProtocolMessageType('TypedMessage', (_message.Message,), {
   'DESCRIPTOR' : _TYPEDMESSAGE,
   '__module__' : 'messenger.api.v1.messenger_pb2'
@@ -202,45 +213,122 @@ RefreshDHKeyRequestToClient = _reflection.GeneratedProtocolMessageType('RefreshD
   })
 _sym_db.RegisterMessage(RefreshDHKeyRequestToClient)
 
+CreateGroupRequest = _reflection.GeneratedProtocolMessageType('CreateGroupRequest', (_message.Message,), {
+  'DESCRIPTOR' : _CREATEGROUPREQUEST,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.CreateGroupRequest)
+  })
+_sym_db.RegisterMessage(CreateGroupRequest)
+
+CreateGroupResponse = _reflection.GeneratedProtocolMessageType('CreateGroupResponse', (_message.Message,), {
+  'DESCRIPTOR' : _CREATEGROUPRESPONSE,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.CreateGroupResponse)
+  })
+_sym_db.RegisterMessage(CreateGroupResponse)
+
+ListGroupsRequest = _reflection.GeneratedProtocolMessageType('ListGroupsRequest', (_message.Message,), {
+  'DESCRIPTOR' : _LISTGROUPSREQUEST,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.ListGroupsRequest)
+  })
+_sym_db.RegisterMessage(ListGroupsRequest)
+
+Group = _reflection.GeneratedProtocolMessageType('Group', (_message.Message,), {
+  'DESCRIPTOR' : _GROUP,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.Group)
+  })
+_sym_db.RegisterMessage(Group)
+
+ListGroupsResponse = _reflection.GeneratedProtocolMessageType('ListGroupsResponse', (_message.Message,), {
+  'DESCRIPTOR' : _LISTGROUPSRESPONSE,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.ListGroupsResponse)
+  })
+_sym_db.RegisterMessage(ListGroupsResponse)
+
+GetPublicKeyRequest = _reflection.GeneratedProtocolMessageType('GetPublicKeyRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETPUBLICKEYREQUEST,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.GetPublicKeyRequest)
+  })
+_sym_db.RegisterMessage(GetPublicKeyRequest)
+
+GetPublicKeyResponse = _reflection.GeneratedProtocolMessageType('GetPublicKeyResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETPUBLICKEYRESPONSE,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.GetPublicKeyResponse)
+  })
+_sym_db.RegisterMessage(GetPublicKeyResponse)
+
+AddGroupMemberRequestToServer = _reflection.GeneratedProtocolMessageType('AddGroupMemberRequestToServer', (_message.Message,), {
+  'DESCRIPTOR' : _ADDGROUPMEMBERREQUESTTOSERVER,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.AddGroupMemberRequestToServer)
+  })
+_sym_db.RegisterMessage(AddGroupMemberRequestToServer)
+
+AddGroupMemberResponse = _reflection.GeneratedProtocolMessageType('AddGroupMemberResponse', (_message.Message,), {
+  'DESCRIPTOR' : _ADDGROUPMEMBERRESPONSE,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.AddGroupMemberResponse)
+  })
+_sym_db.RegisterMessage(AddGroupMemberResponse)
+
+AddGroupMemberRequestToClient = _reflection.GeneratedProtocolMessageType('AddGroupMemberRequestToClient', (_message.Message,), {
+  'DESCRIPTOR' : _ADDGROUPMEMBERREQUESTTOCLIENT,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.AddGroupMemberRequestToClient)
+  })
+_sym_db.RegisterMessage(AddGroupMemberRequestToClient)
+
+AddNewGroupMemberNotification = _reflection.GeneratedProtocolMessageType('AddNewGroupMemberNotification', (_message.Message,), {
+  'DESCRIPTOR' : _ADDNEWGROUPMEMBERNOTIFICATION,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.AddNewGroupMemberNotification)
+  })
+_sym_db.RegisterMessage(AddNewGroupMemberNotification)
+
 _MESSENGERSERVICE = DESCRIPTOR.services_by_name['MessengerService']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   _TYPEDMESSAGE._serialized_start=40
-  _TYPEDMESSAGE._serialized_end=83
-  _SIGNEDMESSAGE._serialized_start=85
-  _SIGNEDMESSAGE._serialized_end=154
-  _GETRSAPUBLICKEYREQUEST._serialized_start=156
-  _GETRSAPUBLICKEYREQUEST._serialized_end=180
-  _GETRSAPUBLICKEYRESPONSE._serialized_start=182
-  _GETRSAPUBLICKEYRESPONSE._serialized_end=220
-  _GETDHPARAMETERSREQUEST._serialized_start=222
-  _GETDHPARAMETERSREQUEST._serialized_end=246
-  _GETDHPARAMETERSRESPONSE._serialized_start=248
-  _GETDHPARAMETERSRESPONSE._serialized_end=306
-  _GETDHPUBLICKEYREQUEST._serialized_start=308
-  _GETDHPUBLICKEYREQUEST._serialized_end=331
-  _GETDHPUBLICKEYRESPONSE._serialized_start=333
-  _GETDHPUBLICKEYRESPONSE._serialized_end=368
-  _REGISTERREQUEST._serialized_start=370
-  _REGISTERREQUEST._serialized_end=428
-  _REGISTERRESPONSE._serialized_start=430
-  _REGISTERRESPONSE._serialized_end=448
-  _LOGINREQUEST._serialized_start=450
-  _LOGINREQUEST._serialized_end=530
-  _LOGINRESPONSE._serialized_start=532
-  _LOGINRESPONSE._serialized_end=547
-  _ECHOMESSAGE._serialized_start=549
-  _ECHOMESSAGE._serialized_end=579
-  _LISTONLINEUSERSREQUEST._serialized_start=581
-  _LISTONLINEUSERSREQUEST._serialized_end=605
-  _LISTONLINEUSERSRESPONSE._serialized_start=607
-  _LISTONLINEUSERSRESPONSE._serialized_end=650
-  _CHATREQUESTFROMCLIENT._serialized_start=652
-  _CHATREQUESTFROMCLIENT._serialized_end=694
-  _CHATREQUESTFROMSERVER._serialized_start=696
-  _CHATREQUESTFROMSERVER._serialized_end=783
-  _CHATREQUESTFROMSERVERRESPONSE._serialized_start=785
+  _TYPEDMESSAGE._serialized_end=103
+  _SIGNEDMESSAGE._serialized_start=105
+  _SIGNEDMESSAGE._serialized_end=194
+  _GETRSAPUBLICKEYREQUEST._serialized_start=196
+  _GETRSAPUBLICKEYREQUEST._serialized_end=220
+  _GETRSAPUBLICKEYRESPONSE._serialized_start=222
+  _GETRSAPUBLICKEYRESPONSE._serialized_end=260
+  _GETDHPARAMETERSREQUEST._serialized_start=262
+  _GETDHPARAMETERSREQUEST._serialized_end=286
+  _GETDHPARAMETERSRESPONSE._serialized_start=288
+  _GETDHPARAMETERSRESPONSE._serialized_end=346
+  _GETDHPUBLICKEYREQUEST._serialized_start=348
+  _GETDHPUBLICKEYREQUEST._serialized_end=371
+  _GETDHPUBLICKEYRESPONSE._serialized_start=373
+  _GETDHPUBLICKEYRESPONSE._serialized_end=408
+  _REGISTERREQUEST._serialized_start=410
+  _REGISTERREQUEST._serialized_end=468
+  _REGISTERRESPONSE._serialized_start=470
+  _REGISTERRESPONSE._serialized_end=488
+  _LOGINREQUEST._serialized_start=490
+  _LOGINREQUEST._serialized_end=570
+  _LOGINRESPONSE._serialized_start=572
+  _LOGINRESPONSE._serialized_end=587
+  _ECHOMESSAGE._serialized_start=589
+  _ECHOMESSAGE._serialized_end=619
+  _LISTONLINEUSERSREQUEST._serialized_start=621
+  _LISTONLINEUSERSREQUEST._serialized_end=645
+  _LISTONLINEUSERSRESPONSE._serialized_start=647
+  _LISTONLINEUSERSRESPONSE._serialized_end=690
+  _CHATREQUESTFROMCLIENT._serialized_start=692
+  _CHATREQUESTFROMCLIENT._serialized_end=734
+  _CHATREQUESTFROMSERVER._serialized_start=736
+  _CHATREQUESTFROMSERVER._serialized_end=803
+  _CHATREQUESTFROMSERVERRESPONSE._serialized_start=805
   _CHATREQUESTFROMSERVERRESPONSE._serialized_end=854
   _CHATREQUESTFROMCLIENTRESPONSE._serialized_start=856
   _CHATREQUESTFROMCLIENTRESPONSE._serialized_end=959
@@ -252,6 +340,28 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _REFRESHDHKEYREQUESTTOSERVER._serialized_end=1154
   _REFRESHDHKEYREQUESTTOCLIENT._serialized_start=1156
   _REFRESHDHKEYREQUESTTOCLIENT._serialized_end=1229
-  _MESSENGERSERVICE._serialized_start=1232
-  _MESSENGERSERVICE._serialized_end=1568
+  _CREATEGROUPREQUEST._serialized_start=1231
+  _CREATEGROUPREQUEST._serialized_end=1263
+  _CREATEGROUPRESPONSE._serialized_start=1265
+  _CREATEGROUPRESPONSE._serialized_end=1321
+  _LISTGROUPSREQUEST._serialized_start=1323
+  _LISTGROUPSREQUEST._serialized_end=1342
+  _GROUP._serialized_start=1344
+  _GROUP._serialized_end=1408
+  _LISTGROUPSRESPONSE._serialized_start=1410
+  _LISTGROUPSRESPONSE._serialized_end=1457
+  _GETPUBLICKEYREQUEST._serialized_start=1459
+  _GETPUBLICKEYREQUEST._serialized_end=1497
+  _GETPUBLICKEYRESPONSE._serialized_start=1499
+  _GETPUBLICKEYRESPONSE._serialized_end=1581
+  _ADDGROUPMEMBERREQUESTTOSERVER._serialized_start=1583
+  _ADDGROUPMEMBERREQUESTTOSERVER._serialized_end=1649
+  _ADDGROUPMEMBERRESPONSE._serialized_start=1651
+  _ADDGROUPMEMBERRESPONSE._serialized_end=1710
+  _ADDGROUPMEMBERREQUESTTOCLIENT._serialized_start=1712
+  _ADDGROUPMEMBERREQUESTTOCLIENT._serialized_end=1769
+  _ADDNEWGROUPMEMBERNOTIFICATION._serialized_start=1771
+  _ADDNEWGROUPMEMBERNOTIFICATION._serialized_end=1837
+  _MESSENGERSERVICE._serialized_start=1840
+  _MESSENGERSERVICE._serialized_end=2176
 # @@protoc_insertion_point(module_scope)

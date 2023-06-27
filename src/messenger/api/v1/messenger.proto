@@ -3,13 +3,14 @@ syntax = "proto3";
 package v1;
 
 message TypedMessage {
-  string type = 1;
-  bytes value = 2;
+  string request_id = 1;
+  string type = 2;
+  bytes value = 3;
 }
 
 message SignedMessage {
-  TypedMessage message = 1;
-  string signature = 2;
+  TypedMessage message = 2;
+  string signature = 3;
 }
 
 message GetRSAPublicKeyRequest {
@@ -68,13 +69,11 @@ message ChatRequestFromClient {
 }
 
 message ChatRequestFromServer {
-  string request_id = 1;
   string requester = 2;
   string dh_public_key_y = 3;
 }
 
 message ChatRequestFromServerResponse {
-  string request_id = 1;
   bool accepted = 2;
 }
 
@@ -103,6 +102,57 @@ message RefreshDHKeyRequestToServer {
 message RefreshDHKeyRequestToClient {
   string requester = 2;
   string dh_public_key_y = 3;
+}
+
+message CreateGroupRequest {
+  string id = 1;
+}
+
+message CreateGroupResponse {
+  bool successful = 1;
+  string error = 3;
+}
+
+message ListGroupsRequest {
+}
+
+message Group {
+  string id = 1;
+  repeated string members = 2;
+  bool is_requester_admin = 3;
+}
+
+message ListGroupsResponse {
+  repeated Group groups = 1;
+}
+
+message GetPublicKeyRequest {
+  string user_id = 1;
+}
+
+message GetPublicKeyResponse {
+  bool successful = 1;
+  string dh_public_key_y = 2;
+  string error = 3;
+}
+
+message AddGroupMemberRequestToServer {
+  string group_id = 1;
+  string user_id = 2;
+}
+
+message AddGroupMemberResponse {
+  bool successful = 1;
+  string error = 2;
+}
+
+message AddGroupMemberRequestToClient {
+  Group group = 1;
+}
+
+message AddNewGroupMemberNotification {
+  string group_id = 1;
+  string user_id = 2;
 }
 
 service MessengerService {

@@ -5,6 +5,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import dh
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
+from django.contrib.auth.models import User
 from django.db import models
 
 from messenger.utils import sha256_hash
@@ -117,4 +118,29 @@ class ChatRequest(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['requester', 'requestee']),
+        ]
+
+
+class GroupChat(models.Model):
+    id = models.CharField(max_length=256, unique=True, primary_key=True)
+    members = models.ManyToManyField('auth.User', related_name='group_chats', through='GroupChatMember')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def admin(self) -> User:
+        return self.members.get(groupchatmember__is_admin=True)
+
+
+class GroupChatMember(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    group_chat = models.ForeignKey('GroupChat', on_delete=models.CASCADE)
+    is_admin = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'group_chat')
+        indexes = [
+            models.Index(fields=['user', 'group_chat']),
         ]

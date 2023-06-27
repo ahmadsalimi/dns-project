@@ -1,5 +1,6 @@
 import queue
 import threading
+import uuid
 from functools import cached_property
 from typing import Iterator
 
@@ -14,7 +15,7 @@ from django.contrib.auth.models import User
 
 from messenger.api.v1 import messenger_pb2 as m
 from messenger.api.v1.messenger_pb2_grpc import MessengerServiceServicer, add_MessengerServiceServicer_to_server
-from messenger.models import Configuration, ServerKey, Session, ChatRequest
+from messenger.models import Configuration, ServerKey, Session, ChatRequest, GroupChat, GroupChatMember
 from messenger.utils import num2bytes, sha256_hash, sign_message, decrypt_rsa, parse_typed_message, decrypt_aes, \
     isoftype
 
@@ -166,8 +167,16 @@ class MessengerService(MessengerServiceServicer):
         handle_session_requests_thread.start()
         try:
             yield sign_message(m.LoginResponse(), self.rsa_private_key, dh_shared_secret)
-            while (response := response_queue.get()) is not None:
-                yield sign_message(response, self.rsa_private_key, dh_shared_secret)
+            while (response := response_queue.get()) and response[1] is not None:
+                signed_message = sign_message(response[1], self.rsa_private_key, dh_shared_secret)
+                print(f'message {response[0]} of type {signed_message.message.type} signed.')
+                signed_message.message.request_id = response[0]
+                yield signed_message
+                print(f'message {response[0]} of type {signed_message.message.type} sent.')
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            raise e
         finally:
             session.delete()
 
@@ -177,16 +186,24 @@ class MessengerService(MessengerServiceServicer):
                                   user: User) -> None:
         try:
             for message in request_iterator:
+                request_id = message.request_id
+                print(f'request id: {request_id}')
                 message.value = decrypt_aes(message.value, dh_shared_secret)
                 request = parse_typed_message(message)
-                response = self.__handle_session_request(request, user)
+                print('request parsed')
+                response = self.__handle_session_request(request_id, request, user)
+                print('response handled')
                 if response is None:
                     continue
-                response_queue.put(response)
+                response_queue.put((request_id, response))
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            raise e
         finally:
-            response_queue.put(None)
+            response_queue.put((None, None))
 
-    def __handle_session_request(self, request: google.protobuf.message.Message,
+    def __handle_session_request(self, request_id: str, request: google.protobuf.message.Message,
                                  user: User) -> google.protobuf.message.Message:
         if request.DESCRIPTOR.name == m.EchoMessage.DESCRIPTOR.name:
             return m.EchoMessage(message=request.message)
@@ -204,35 +221,35 @@ class MessengerService(MessengerServiceServicer):
                     accepted=False,
                     error=f'User {request.requestee} either does not exist or is offline',
                 )
-            chat_request = ChatRequest.objects.create(
+            ChatRequest.objects.create(
+                id=uuid.UUID(request_id),
                 requester=user,
                 requestee=User.objects.get(username=request.requestee),
             )
-            self.__response_queues[request.requestee].put(m.ChatRequestFromServer(
-                request_id=str(chat_request.id),
+            self.__response_queues[request.requestee].put((request_id, m.ChatRequestFromServer(
                 requester=user.username,
                 dh_public_key_y=num2bytes(user.session.parsed_dh_public_key.public_numbers().y).hex(),
-            ))
+            )))
             return
         elif request.DESCRIPTOR.name == m.ChatRequestFromServerResponse.DESCRIPTOR.name:
             # user = requestee
-            if not ChatRequest.objects.filter(id=request.request_id).exists():
+            if not ChatRequest.objects.filter(id=request_id).exists():
                 return
-            chat_request = ChatRequest.objects.get(id=request.request_id)
+            chat_request = ChatRequest.objects.get(id=request_id)
             if chat_request.requestee != user:
                 return
             if not request.accepted:
-                self.__response_queues[chat_request.requester.username].put(m.ChatRequestFromClientResponse(
+                self.__response_queues[chat_request.requester.username].put((request_id, m.ChatRequestFromClientResponse(
                     accepted=False,
                     error=f'User {user.username} rejected your chat request',
-                ))
+                )))
                 chat_request.status = ChatRequest.Status.REJECTED
                 chat_request.save()
                 return
-            self.__response_queues[chat_request.requester.username].put(m.ChatRequestFromClientResponse(
+            self.__response_queues[chat_request.requester.username].put((request_id, m.ChatRequestFromClientResponse(
                 accepted=True,
                 dh_public_key_y=num2bytes(user.session.parsed_dh_public_key.public_numbers().y).hex(),
-            ))
+            )))
             chat_request.status = ChatRequest.Status.ACCEPTED
             chat_request.save()
             return
@@ -241,10 +258,10 @@ class MessengerService(MessengerServiceServicer):
                                               requestee__username__in=[user.username, request.destination],
                                               status=ChatRequest.Status.ACCEPTED).exists():
                 return
-            self.__response_queues[request.destination].put(m.ChatMessageToClient(
+            self.__response_queues[request.destination].put((request_id, m.ChatMessageToClient(
                 source=user.username,
                 message_ciphertext=request.message_ciphertext,
-            ))
+            )))
             return
         elif request.DESCRIPTOR.name == m.RefreshDHKeyRequestToServer.DESCRIPTOR.name:
             user.session.parsed_dh_public_key = dh.DHPublicNumbers(
@@ -258,11 +275,86 @@ class MessengerService(MessengerServiceServicer):
 
             # other users
             for session in Session.objects.exclude(user=user):
-                self.__response_queues[session.user.username].put(m.RefreshDHKeyRequestToClient(
+                self.__response_queues[session.user.username].put((request_id, m.RefreshDHKeyRequestToClient(
                     requester=user.username,
                     dh_public_key_y=request.dh_public_key_y,
-                ))
+                )))
             return
+        elif request.DESCRIPTOR.name == m.CreateGroupRequest.DESCRIPTOR.name:
+            if GroupChat.objects.filter(id=request.id).exists():
+                return m.CreateGroupResponse(
+                    successful=False,
+                    error=f'Group with id {request.id} already exists',
+                )
+            group_chat = GroupChat.objects.create(id=request.id)
+            GroupChatMember.objects.create(
+                user=user,
+                group_chat=group_chat,
+                is_admin=True,
+            )
+            return m.CreateGroupResponse(
+                successful=True,
+            )
+        elif request.DESCRIPTOR.name == m.ListGroupsRequest.DESCRIPTOR.name:
+            print(f'{user.username} requested groups list')
+            return m.ListGroupsResponse(
+                groups=[
+                    m.Group(
+                        id=group_chat.id,
+                        members=[member.username for member in group_chat.members.all()
+                                 if Session.objects.filter(user=member).exists()],
+                        is_requester_admin=GroupChatMember.objects.get(user=user, group_chat=group_chat).is_admin,
+                    )
+                    for group_chat in GroupChat.objects.filter(members=user)
+                ]
+            )
+        elif request.DESCRIPTOR.name == m.GetPublicKeyRequest.DESCRIPTOR.name:
+            if not Session.objects.filter(user__username=request.user_id).exists():
+                return m.GetPublicKeyResponse(
+                    successful=False,
+                    error=f'User {request.user_id} either does not exist or is offline',
+                )
+            return m.GetPublicKeyResponse(
+                successful=True,
+                dh_public_key_y=num2bytes(Session.objects.get(user__username=request.user_id)
+                                          .parsed_dh_public_key.public_numbers().y).hex(),
+            )
+        elif request.DESCRIPTOR.name == m.AddGroupMemberRequestToServer.DESCRIPTOR.name:
+            if not Session.objects.filter(user__username=request.user_id).exists():
+                return m.AddGroupMemberResponse(
+                    successful=False,
+                    error=f'User {request.user_id} either does not exist or is offline',
+                )
+            if not GroupChatMember.objects.filter(user=user, group_chat__id=request.group_id, is_admin=True).exists():
+                return m.AddGroupMemberResponse(
+                    successful=False,
+                    error=f'User {user.username} is not an admin of group {request.group_id}',
+                )
+            group_chat = GroupChat.objects.get(id=request.group_id)
+            if GroupChatMember.objects.filter(user__username=request.user_id, group_chat=group_chat).exists():
+                return m.AddGroupMemberResponse(
+                    successful=False,
+                    error=f'User {request.user_id} is already a member of group {request.group_id}',
+                )
+            GroupChatMember.objects.create(
+                user=User.objects.get(username=request.user_id),
+                group_chat=group_chat,
+                is_admin=False,
+            )
+            self.__response_queues[request.user_id].put((request_id, m.AddGroupMemberRequestToClient(
+                group=m.Group(
+                    id=group_chat.id,
+                    members=[member.username for member in group_chat.members.all()],
+                ),
+            )))
+            for member in group_chat.members.exclude(username__in=[user.username, request.user_id]):
+                self.__response_queues[member.username].put((request_id, m.AddNewGroupMemberNotification(
+                    group_id=request.group_id,
+                    user_id=request.user_id,
+                )))
+            return m.AddGroupMemberResponse(
+                successful=True,
+            )
         else:
             print(f'Unknown message type: {request.DESCRIPTOR.name}')
 
