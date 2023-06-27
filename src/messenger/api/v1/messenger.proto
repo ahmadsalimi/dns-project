@@ -96,6 +96,15 @@ message ChatMessageToClient {
   string message_ciphertext = 2;
 }
 
+message RefreshDHKeyRequestToServer {
+  string dh_public_key_y = 1;
+}
+
+message RefreshDHKeyRequestToClient {
+  string requester = 2;
+  string dh_public_key_y = 3;
+}
+
 service MessengerService {
   rpc GetRSAPublicKey(GetRSAPublicKeyRequest) returns (GetRSAPublicKeyResponse);
 

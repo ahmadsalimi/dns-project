@@ -2,6 +2,7 @@ import uuid
 from typing import Optional
 
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import dh
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from django.db import models
@@ -90,6 +91,13 @@ class Session(models.Model):
     @property
     def parsed_dh_public_key(self) -> dh.DHPublicKey:
         return load_pem_public_key(self.dh_public_key, default_backend())
+
+    @parsed_dh_public_key.setter
+    def parsed_dh_public_key(self, value: dh.DHPublicKey):
+        self.dh_public_key = value.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
 
 
 class ChatRequest(models.Model):

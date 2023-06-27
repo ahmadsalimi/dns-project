@@ -245,6 +245,24 @@ class MessengerService(MessengerServiceServicer):
                 source=user.username,
                 message_ciphertext=request.message_ciphertext,
             ))
+            return
+        elif request.DESCRIPTOR.name == m.RefreshDHKeyRequestToServer.DESCRIPTOR.name:
+            user.session.parsed_dh_public_key = dh.DHPublicNumbers(
+                y=int.from_bytes(bytes.fromhex(request.dh_public_key_y), 'big'),
+                parameter_numbers=self.dh_parameters.parameter_numbers(),
+            ).public_key(default_backend())
+
+            user.session.dh_shared_secret = sha256_hash(
+                self.dh_private_key.exchange(user.session.parsed_dh_public_key))
+            user.session.save()
+
+            # other users
+            for session in Session.objects.exclude(user=user):
+                self.__response_queues[session.user.username].put(m.RefreshDHKeyRequestToClient(
+                    requester=user.username,
+                    dh_public_key_y=request.dh_public_key_y,
+                ))
+            return
         else:
             print(f'Unknown message type: {request.DESCRIPTOR.name}')
 
