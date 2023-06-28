@@ -355,6 +355,20 @@ class MessengerService(MessengerServiceServicer):
             return m.AddGroupMemberResponse(
                 successful=True,
             )
+        elif request.DESCRIPTOR.name == m.GroupChatMessageToServer.DESCRIPTOR.name:
+            if not GroupChatMember.objects.filter(user=user, group_chat__id=request.group_id).exists():
+                return
+            for message in request.messages:
+                if not GroupChatMember.objects.filter(user__username=message.destination,
+                                                      group_chat__id=request.group_id).exists():
+                    continue
+                self.__response_queues[message.destination].put((request_id, m.GroupChatMessageToClient(
+                    group_id=request.group_id,
+                    message=m.ChatMessageToClient(
+                        source=user.username,
+                        message_ciphertext=message.message_ciphertext,
+                    ),
+                )))
         else:
             print(f'Unknown message type: {request.DESCRIPTOR.name}')
 
