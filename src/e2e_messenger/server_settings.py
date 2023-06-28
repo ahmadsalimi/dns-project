@@ -163,6 +163,9 @@ DATABASES = {
         'PORT': env('DB_PORT'),
     }
 }
+CSRF_TRUSTED_ORIGINS = [
+    f'https://*.{domain}' for domain in DOMAINS
+]
 
 X_FRAME_OPTIONS = 'ALLOWALL'
 
