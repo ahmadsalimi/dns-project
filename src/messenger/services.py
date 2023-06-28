@@ -180,6 +180,7 @@ class MessengerService(MessengerServiceServicer):
                             user_id=user.username,
                         ),
                     ))
+            yield sign_message(m.SessionReadyNotification(), self.rsa_private_key, dh_shared_secret)
             while (response := response_queue.get()) and response[1] is not None:
                 signed_message = sign_message(response[1], self.rsa_private_key, dh_shared_secret)
                 print(f'message {response[0]} of type {signed_message.message.type} signed.')
@@ -395,6 +396,41 @@ class MessengerService(MessengerServiceServicer):
                         message_ciphertext=message.message_ciphertext,
                     ),
                 )))
+        elif request.DESCRIPTOR.name == m.RemoveMemberFromGroupRequestToServer.DESCRIPTOR.name:
+            if request.user_id == user.username:
+                return m.RemoveMemberFromGroupResponse(
+                    successful=False,
+                    error=f'User {request.user_id} cannot remove himself from group {request.group_id}',
+                )
+            if not User.objects.filter(username=request.user_id).exists():
+                return m.RemoveMemberFromGroupResponse(
+                    successful=False,
+                    error=f'User {request.user_id} does not exist',
+                )
+            if not GroupChatMember.objects.filter(user=user, group_chat__id=request.group_id, is_admin=True).exists():
+                return m.RemoveMemberFromGroupResponse(
+                    successful=False,
+                    error=f'Either user {user.username} is not an admin of group {request.group_id} '
+                          f'or group {request.group_id} does not exist',
+                )
+            group_chat = GroupChat.objects.get(id=request.group_id)
+            if not GroupChatMember.objects.filter(user__username=request.user_id, group_chat=group_chat).exists():
+                return m.RemoveMemberFromGroupResponse(
+                    successful=False,
+                    error=f'User {request.user_id} is not a member of group {request.group_id}',
+                )
+            GroupChatMember.objects.get(user__username=request.user_id, group_chat=group_chat).delete()
+            self.__response_queues[request.user_id].put((request_id, m.RemoveMemberFromGroupRequestToClient(
+                group_id=request.group_id,
+            )))
+            for member in group_chat.members.exclude(username__in=[user.username, request.user_id]):
+                self.__response_queues[member.username].put((request_id, m.RemoveGroupMemberNotification(
+                    group_id=request.group_id,
+                    user_id=request.user_id,
+                )))
+            return m.RemoveMemberFromGroupResponse(
+                successful=True,
+            )
         else:
             print(f'Unknown message type: {request.DESCRIPTOR.name}')
 

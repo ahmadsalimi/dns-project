@@ -170,6 +170,22 @@ message RemoveGroupMemberNotification {
   string user_id = 2;
 }
 
+message RemoveMemberFromGroupRequestToServer {
+  string group_id = 1;
+  string user_id = 2;
+}
+
+message RemoveMemberFromGroupResponse {
+  bool successful = 1;
+  string error = 2;
+}
+
+message RemoveMemberFromGroupRequestToClient {
+  string group_id = 1;
+}
+
+message SessionReadyNotification {}
+
 service MessengerService {
   rpc GetRSAPublicKey(GetRSAPublicKeyRequest) returns (GetRSAPublicKeyResponse);
 
