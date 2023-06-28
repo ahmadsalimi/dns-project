@@ -135,9 +135,11 @@ class MessengerService(MessengerServiceServicer):
     @staticmethod
     def __log_request(request: m.TypedMessage, requester: User,
                       context: grpc.ServicerContext):
-        if Request.objects.filter(id=request.request_id).exists():
-            context.abort(grpc.StatusCode.ALREADY_EXISTS, 'Duplicate request ID')
-        Request.objects.create(id=request.request_id,
+        if Request.objects.filter(request_id=request.request_id,
+                                  requester=requester,
+                                  request_type=request.type).exists():
+            context.abort(grpc.StatusCode.ALREADY_EXISTS, 'Duplicate request')
+        Request.objects.create(request_id=request.request_id,
                                requester=requester,
                                request_type=request.type)
 

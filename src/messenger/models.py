@@ -152,7 +152,7 @@ class GroupChatMember(models.Model):
 
 
 class Request(models.Model):
-    id = models.UUIDField(unique=True, primary_key=True)
+    request_id = models.UUIDField(blank=True, null=True)
     requester = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='requests_sent')
     request_type = models.CharField(max_length=256)
     created_at = models.DateTimeField(auto_now_add=True)
