@@ -16,8 +16,8 @@ class ServerKeyAdmin(admin.ModelAdmin):
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
-    readonly_fields = ('id', 'user', 'public_key_signature', 'shared_secret_signature',
-                       'created_at', 'updated_at')
+    readonly_fields = ('id', 'user', 'dh_public_key_signature', 'shared_secret_signature',
+                       'rsa_public_key_signature', 'created_at', 'updated_at')
     list_display = ('id', 'user', 'shared_secret_signature', 'created_at', 'updated_at')
 
 

@@ -11,7 +11,7 @@ import grpc
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, dh
-from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_parameters
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_parameters, load_pem_public_key
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 
@@ -19,7 +19,7 @@ from messenger.api.v1 import messenger_pb2 as m
 from messenger.api.v1.messenger_pb2_grpc import MessengerServiceServicer, add_MessengerServiceServicer_to_server
 from messenger.models import Configuration, ServerKey, Session, ChatRequest, GroupChat, GroupChatMember, Request
 from messenger.utils import num2bytes, sha256_hash, sign_message, decrypt_rsa, parse_typed_message, decrypt_aes, \
-    isoftype, sha256_hmac
+    isoftype, verify_signature, parse_signed_message
 
 
 class MessengerService(MessengerServiceServicer):
@@ -144,10 +144,15 @@ class MessengerService(MessengerServiceServicer):
     def StartSession(self, request_iterator: Iterator[m.TypedMessage],
                      context: grpc.ServicerContext) -> Iterator[m.SignedMessage]:
         m1 = next(request_iterator)
-        if not isoftype(m1, m.LoginRequest):
+        if not isoftype(m1.message, m.LoginRequest):
             context.abort(grpc.StatusCode.INVALID_ARGUMENT,
-                          f'Expected {m.LoginRequest.DESCRIPTOR.name}, got {m1.type}')
-        login_request = parse_typed_message(m1)
+                          f'Expected {m.LoginRequest.DESCRIPTOR.name}, got {m1.message.type}')
+        login_request = parse_typed_message(m1.message)
+        rsa_public_key = load_pem_public_key(
+            bytes.fromhex(login_request.rsa_public_key),
+            default_backend(),
+        )
+        verify_signature(m1.message.value, m1.signature, rsa_public_key)
         id_ = login_request.id
         dh_public_key_y = int.from_bytes(bytes.fromhex(login_request.dh_public_key_y), 'big')
         dh_public_key = dh.DHPublicNumbers(y=dh_public_key_y,
@@ -162,19 +167,20 @@ class MessengerService(MessengerServiceServicer):
         if not form.is_valid():
             context.abort(grpc.StatusCode.INVALID_ARGUMENT, form.errors.as_text())
         user = form.get_user()
-        self.__log_request(m1, user, context)
+        self.__log_request(m1.message, user, context)
         session = Session.objects.create(
             user=user,
             dh_public_key=dh_public_key.public_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PublicFormat.SubjectPublicKeyInfo,
             ),
+            rsa_public_key=bytes.fromhex(login_request.rsa_public_key),
             dh_shared_secret=dh_shared_secret,
         )
         self.__response_queues[user.username] = response_queue = queue.Queue()
         handle_session_requests_thread = threading.Thread(
             target=self.__handle_session_requests,
-            args=(request_iterator, context, response_queue, dh_shared_secret, user),
+            args=(request_iterator, context, response_queue, dh_shared_secret, rsa_public_key, user),
         )
         handle_session_requests_thread.start()
         print(f'User {user.username} started session')
@@ -220,20 +226,18 @@ class MessengerService(MessengerServiceServicer):
                     ))
             session.delete()
 
-    def __handle_session_requests(self, request_iterator: Iterator[m.TypedMessage],
+    def __handle_session_requests(self, request_iterator: Iterator[m.SignedMessage],
                                   context: grpc.ServicerContext,
                                   response_queue: queue.Queue,
                                   dh_shared_secret: bytes,
+                                  rsa_public_key: rsa.RSAPublicKey,
                                   user: User) -> None:
         try:
             for message in request_iterator:
-                self.__log_request(message, user, context)
-                request_id = message.request_id
+                self.__log_request(message.message, user, context)
+                request_id = message.message.request_id
                 print(f'request id: {request_id}')
-                message.value = decrypt_aes(message.value, dh_shared_secret)
-                if sha256_hmac(dh_shared_secret, message.value).hex() != message.mac:
-                    context.abort(grpc.StatusCode.INVALID_ARGUMENT, 'HMAC verification failed')
-                request = parse_typed_message(message)
+                request = parse_signed_message(message, rsa_public_key, dh_shared_secret)
                 print('request parsed')
                 response = self.__handle_session_request(request_id, request, user)
                 print('response handled')

@@ -78,12 +78,17 @@ class Session(models.Model):
     user = models.OneToOneField('auth.User', on_delete=models.CASCADE, related_name='session')
     dh_public_key = models.BinaryField()
     dh_shared_secret = models.BinaryField()
+    rsa_public_key = models.BinaryField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
-    def public_key_signature(self) -> str:
+    def dh_public_key_signature(self) -> str:
         return sha256_hash(self.dh_public_key).hex()
+
+    @property
+    def rsa_public_key_signature(self) -> str:
+        return sha256_hash(self.rsa_public_key).hex()
 
     @property
     def shared_secret_signature(self) -> str:

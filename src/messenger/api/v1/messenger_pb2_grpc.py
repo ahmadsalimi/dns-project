@@ -36,7 +36,7 @@ class MessengerServiceStub(object):
                 )
         self.StartSession = channel.stream_stream(
                 '/v1.MessengerService/StartSession',
-                request_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.TypedMessage.SerializeToString,
+                request_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.SerializeToString,
                 response_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.FromString,
                 )
 
@@ -99,7 +99,7 @@ def add_MessengerServiceServicer_to_server(servicer, server):
             ),
             'StartSession': grpc.stream_stream_rpc_method_handler(
                     servicer.StartSession,
-                    request_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.TypedMessage.FromString,
+                    request_deserializer=messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.FromString,
                     response_serializer=messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.SerializeToString,
             ),
     }
@@ -192,7 +192,7 @@ class MessengerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.stream_stream(request_iterator, target, '/v1.MessengerService/StartSession',
-            messenger_dot_api_dot_v1_dot_messenger__pb2.TypedMessage.SerializeToString,
+            messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.SerializeToString,
             messenger_dot_api_dot_v1_dot_messenger__pb2.SignedMessage.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

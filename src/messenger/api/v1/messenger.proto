@@ -51,6 +51,7 @@ message LoginRequest {
   string id = 1;
   string password_ciphertext = 2;
   string dh_public_key_y = 3;
+  string rsa_public_key = 4;
 }
 
 message LoginResponse {
@@ -211,5 +212,5 @@ service MessengerService {
 
   rpc Register(RegisterRequest) returns (RegisterResponse);
 
-  rpc StartSession(stream TypedMessage) returns (stream SignedMessage);
+  rpc StartSession(stream SignedMessage) returns (stream SignedMessage);
 }
