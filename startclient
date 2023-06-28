@@ -1,0 +1,8 @@
+#!/bin/bash
+
+wd=$(pwd)
+cd src || exit
+
+./manage.py ./manage.py connect --settings e2e_messenger.client_settings
+
+cd "$wd" || exit

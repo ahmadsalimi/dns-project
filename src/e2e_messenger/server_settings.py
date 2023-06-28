@@ -11,14 +11,11 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import logging
 import os
-from datetime import timedelta
 from pathlib import Path
 
 import django
-import sentry_sdk
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.encoding import smart_str
-from sentry_sdk.integrations.django import DjangoIntegration
 
 # Fix jet bug
 django.utils.encoding.smart_text = smart_str
@@ -149,76 +146,27 @@ JET_CHANGE_FORM_SIBLING_LINKS = False
 JET_INDEX_DASHBOARD = 'jet.dashboard.dashboard.Dashboard'
 
 STATIC_ROOT = 'static/'
+STATIC_URL = '/static/'
 
 DOMAINS = env('DOMAINS', 'localhost:8000').split(',')
 
-if DEBUG:
-    SECRET_KEY = 'django-insecure-qo-!8kl(ei-ueduidu=+nwt6xi#t939l6cuy)#0@f5bm38%7ml'
-    BASE_URL = f'http://{DOMAINS[0]}'
+SECRET_KEY = env('SECRET_KEY', 'django-insecure-qo-!8kl(ei-ueduidu=+nwt6xi#t939l6cuy)#0@f5bm38%7ml')
+BASE_URL = f'https://{DOMAINS[0]}'
 
-    STATIC_URL = '/static/'
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     }
+}
 
-    X_FRAME_OPTIONS = 'ALLOWALL'
+X_FRAME_OPTIONS = 'ALLOWALL'
 
-    logging.basicConfig()
-else:
-    SECRET_KEY = env('SECRET_KEY')
-    BASE_URL = f'https://{DOMAINS[0]}'
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': env('DB_NAME'),
-            'USER': env('DB_USER'),
-            'PASSWORD': env('DB_PASSWORD'),
-            'HOST': env('DB_HOST'),
-            'PORT': env('DB_PORT'),
-        }
-    }
-
-    X_FRAME_OPTIONS = f'ALLOW-FROM ' + ', '.join([f'https://{domain}/' for domain in DOMAINS])
-
-    CSRF_TRUSTED_ORIGINS = [
-        f'https://*.{domain}' for domain in DOMAINS
-    ]
-
-    # storage
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
-    AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
-    AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
-    AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_CUSTOM_DOMAIN = env('AWS_S3_CUSTOM_DOMAIN')
-    AWS_S3_OBJECT_PARAMETERS = {
-        'CacheControl': f'max-age={timedelta(hours=12).total_seconds()}'
-    }
-    AWS_S3_FILE_OVERWRITE = True
-    AWS_QUERYSTRING_AUTH = False
-    AWS_DEFAULT_ACL = 'public-read'
-
-    sentry_dsn = env('SENTRY_DSN', None)
-
-    if sentry_dsn is not None:
-        sentry_sdk.init(
-            dsn=sentry_dsn,
-            integrations=[DjangoIntegration()],
-
-            # Set traces_sample_rate to 1.0 to capture 100%
-            # of transactions for performance monitoring.
-            # We recommend adjusting this value in production.
-            traces_sample_rate=1.0,
-
-            # If you wish to associate users to errors (assuming you are using
-            # django.contrib.auth) you may enable sending PII data.
-            send_default_pii=True,
-        )
+logging.basicConfig()
 
 XS_SHARING_ALLOWED_METHODS = ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE']
 
