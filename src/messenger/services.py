@@ -167,6 +167,19 @@ class MessengerService(MessengerServiceServicer):
         handle_session_requests_thread.start()
         try:
             yield sign_message(m.LoginResponse(), self.rsa_private_key, dh_shared_secret)
+            print(f'Notifying {user.username}\'s peer users in groups')
+            for group in GroupChat.objects.filter(members=user):
+                print(f'Notifying {user.username}\'s peer users in group {group.id}')
+                for other_session in Session.objects.filter(user__in=group.members.all()).exclude(user=user):
+                    print(f'Notifying {other_session.user.username} of {user.username}\'s session')
+                    request_id = str(uuid.uuid4())
+                    self.__response_queues[other_session.user.username].put((
+                        request_id,
+                        m.AddNewGroupMemberNotification(
+                            group_id=group.id,
+                            user_id=user.username,
+                        ),
+                    ))
             while (response := response_queue.get()) and response[1] is not None:
                 signed_message = sign_message(response[1], self.rsa_private_key, dh_shared_secret)
                 print(f'message {response[0]} of type {signed_message.message.type} signed.')
@@ -178,6 +191,19 @@ class MessengerService(MessengerServiceServicer):
             traceback.print_exc()
             raise e
         finally:
+            print(f'Notifying {user.username}\'s peer users in groups to remove them')
+            for group in GroupChat.objects.filter(members=user):
+                print(f'Notifying {user.username}\'s peer users in group {group.id} to remove them')
+                for other_session in Session.objects.filter(user__in=group.members.all()).exclude(user=user):
+                    print(f'Notifying {other_session.user.username} of {user.username}\'s session to remove them')
+                    request_id = str(uuid.uuid4())
+                    self.__response_queues[other_session.user.username].put((
+                        request_id,
+                        m.RemoveGroupMemberNotification(
+                            group_id=group.id,
+                            user_id=user.username,
+                        ),
+                    ))
             session.delete()
 
     def __handle_session_requests(self, request_iterator: Iterator[m.TypedMessage],

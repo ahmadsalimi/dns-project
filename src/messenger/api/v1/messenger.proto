@@ -165,6 +165,11 @@ message GroupChatMessageToClient {
   ChatMessageToClient message = 2;
 }
 
+message RemoveGroupMemberNotification {
+  string group_id = 1;
+  string user_id = 2;
+}
+
 service MessengerService {
   rpc GetRSAPublicKey(GetRSAPublicKeyRequest) returns (GetRSAPublicKeyResponse);
 
