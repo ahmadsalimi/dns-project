@@ -7,3 +7,4 @@ ipython
 django-storages
 boto3
 grpcio-tools==1.46.5
+pymojihash
