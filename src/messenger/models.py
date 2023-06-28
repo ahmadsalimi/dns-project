@@ -50,12 +50,12 @@ class ServerKey(models.Model):
 
     @property
     def signature(self) -> str:
-        return sha256_hash(self.value).hex()
+        return sha256_hash(self.value.tobytes()).hex()
 
     @classmethod
     def get(cls, name: str, default=None) -> Optional[bytes]:
         try:
-            return cls.objects.get(name=name).value
+            return cls.objects.get(name=name).value.tobytes()
         except cls.DoesNotExist:
             return default
 
