@@ -14,5 +14,3 @@ COPY requirements.txt /tmp/
 RUN pip install -r /tmp/requirements.txt
 
 COPY src/ ./
-
-ENTRYPOINT ["./manage.py", "grpcrunserver", "--settings", "e2e_messenger.server_settings"]
