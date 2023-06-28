@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 package v1;
 
 message TypedMessage {
@@ -87,12 +89,19 @@ message ChatRequestFromClientResponse {
 
 message ChatMessageToServer {
   string destination = 1;
-  string message_ciphertext = 2;
+  string message_ciphertext = 3;
+}
+
+message ChatMessageResponse {
+  bool successful = 1;
+  string error = 2;
+  google.protobuf.Timestamp timestamp = 3;
 }
 
 message ChatMessageToClient {
   string source = 1;
-  string message_ciphertext = 2;
+  google.protobuf.Timestamp timestamp = 2;
+  string message_ciphertext = 3;
 }
 
 message RefreshDHKeyRequestToServer {
@@ -157,12 +166,18 @@ message AddNewGroupMemberNotification {
 
 message GroupChatMessageToServer {
   string group_id = 1;
-  repeated ChatMessageToServer messages = 2;
+  repeated ChatMessageToServer messages = 3;
+}
+
+message GroupChatMessageResponse {
+  bool successful = 1;
+  string error = 2;
+  google.protobuf.Timestamp timestamp = 3;
 }
 
 message GroupChatMessageToClient {
   string group_id = 1;
-  ChatMessageToClient message = 2;
+  ChatMessageToClient message = 3;
 }
 
 message RemoveGroupMemberNotification {

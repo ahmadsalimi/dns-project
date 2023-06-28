@@ -1,10 +1,12 @@
 import queue
 import threading
 import uuid
+from datetime import datetime
 from functools import cached_property
-from typing import Iterator
+from typing import Iterator, Optional
 
-import google
+from google.protobuf.message import Message
+from google.protobuf.timestamp_pb2 import Timestamp
 import grpc
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -165,6 +167,7 @@ class MessengerService(MessengerServiceServicer):
             args=(request_iterator, response_queue, dh_shared_secret, user),
         )
         handle_session_requests_thread.start()
+        print(f'User {user.username} started session')
         try:
             yield sign_message(m.LoginResponse(), self.rsa_private_key, dh_shared_secret)
             print(f'Notifying {user.username}\'s peer users in groups')
@@ -230,8 +233,9 @@ class MessengerService(MessengerServiceServicer):
         finally:
             response_queue.put((None, None))
 
-    def __handle_session_request(self, request_id: str, request: google.protobuf.message.Message,
-                                 user: User) -> google.protobuf.message.Message:
+    # noinspection PyUnresolvedReferences
+    def __handle_session_request(self, request_id: str, request: Message,
+                                 user: User) -> Optional[Message]:
         if request.DESCRIPTOR.name == m.EchoMessage.DESCRIPTOR.name:
             return m.EchoMessage(message=request.message)
         elif request.DESCRIPTOR.name == m.ListOnlineUsersRequest.DESCRIPTOR.name:
@@ -284,12 +288,22 @@ class MessengerService(MessengerServiceServicer):
             if not ChatRequest.objects.filter(requester__username__in=[user.username, request.destination],
                                               requestee__username__in=[user.username, request.destination],
                                               status=ChatRequest.Status.ACCEPTED).exists():
-                return
+                return m.ChatMessageResponse(
+                    successful=False,
+                    error='No accepted chat request between the two users',
+                )
+            now = datetime.now()
+            timestamp = Timestamp()
+            timestamp.FromDatetime(now)
             self.__response_queues[request.destination].put((request_id, m.ChatMessageToClient(
                 source=user.username,
+                timestamp=timestamp,
                 message_ciphertext=request.message_ciphertext,
             )))
-            return
+            return m.ChatMessageResponse(
+                successful=True,
+                timestamp=timestamp,
+            )
         elif request.DESCRIPTOR.name == m.RefreshDHKeyRequestToServer.DESCRIPTOR.name:
             user.session.parsed_dh_public_key = dh.DHPublicNumbers(
                 y=int.from_bytes(bytes.fromhex(request.dh_public_key_y), 'big'),
@@ -384,7 +398,13 @@ class MessengerService(MessengerServiceServicer):
             )
         elif request.DESCRIPTOR.name == m.GroupChatMessageToServer.DESCRIPTOR.name:
             if not GroupChatMember.objects.filter(user=user, group_chat__id=request.group_id).exists():
-                return
+                return m.GroupChatMessageResponse(
+                    successful=False,
+                    error=f'User {user.username} is not a member of group {request.group_id}',
+                )
+            now = datetime.now()
+            timestamp = Timestamp()
+            timestamp.FromDatetime(now)
             for message in request.messages:
                 if not GroupChatMember.objects.filter(user__username=message.destination,
                                                       group_chat__id=request.group_id).exists():
@@ -393,9 +413,14 @@ class MessengerService(MessengerServiceServicer):
                     group_id=request.group_id,
                     message=m.ChatMessageToClient(
                         source=user.username,
+                        timestamp=timestamp,
                         message_ciphertext=message.message_ciphertext,
                     ),
                 )))
+            return m.GroupChatMessageResponse(
+                successful=True,
+                timestamp=timestamp,
+            )
         elif request.DESCRIPTOR.name == m.RemoveMemberFromGroupRequestToServer.DESCRIPTOR.name:
             if request.user_id == user.username:
                 return m.RemoveMemberFromGroupResponse(
