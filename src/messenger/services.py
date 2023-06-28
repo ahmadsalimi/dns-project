@@ -17,7 +17,7 @@ from django.contrib.auth.models import User
 
 from messenger.api.v1 import messenger_pb2 as m
 from messenger.api.v1.messenger_pb2_grpc import MessengerServiceServicer, add_MessengerServiceServicer_to_server
-from messenger.models import Configuration, ServerKey, Session, ChatRequest, GroupChat, GroupChatMember
+from messenger.models import Configuration, ServerKey, Session, ChatRequest, GroupChat, GroupChatMember, Request
 from messenger.utils import num2bytes, sha256_hash, sign_message, decrypt_rsa, parse_typed_message, decrypt_aes, \
     isoftype
 
@@ -132,6 +132,15 @@ class MessengerService(MessengerServiceServicer):
         form.save()
         return m.RegisterResponse()
 
+    @staticmethod
+    def __log_request(request: m.TypedMessage, requester: User,
+                      context: grpc.ServicerContext):
+        if Request.objects.filter(id=request.request_id).exists():
+            context.abort(grpc.StatusCode.ALREADY_EXISTS, 'Duplicate request ID')
+        Request.objects.create(id=request.request_id,
+                               requester=requester,
+                               request_type=request.type)
+
     def StartSession(self, request_iterator: Iterator[m.TypedMessage],
                      context: grpc.ServicerContext) -> Iterator[m.SignedMessage]:
         m1 = next(request_iterator)
@@ -153,6 +162,7 @@ class MessengerService(MessengerServiceServicer):
         if not form.is_valid():
             context.abort(grpc.StatusCode.INVALID_ARGUMENT, form.errors.as_text())
         user = form.get_user()
+        self.__log_request(m1, user, context)
         session = Session.objects.create(
             user=user,
             dh_public_key=dh_public_key.public_bytes(
@@ -164,7 +174,7 @@ class MessengerService(MessengerServiceServicer):
         self.__response_queues[user.username] = response_queue = queue.Queue()
         handle_session_requests_thread = threading.Thread(
             target=self.__handle_session_requests,
-            args=(request_iterator, response_queue, dh_shared_secret, user),
+            args=(request_iterator, context, response_queue, dh_shared_secret, user),
         )
         handle_session_requests_thread.start()
         print(f'User {user.username} started session')
@@ -211,11 +221,13 @@ class MessengerService(MessengerServiceServicer):
             session.delete()
 
     def __handle_session_requests(self, request_iterator: Iterator[m.TypedMessage],
+                                  context: grpc.ServicerContext,
                                   response_queue: queue.Queue,
                                   dh_shared_secret: bytes,
                                   user: User) -> None:
         try:
             for message in request_iterator:
+                self.__log_request(message, user, context)
                 request_id = message.request_id
                 print(f'request id: {request_id}')
                 message.value = decrypt_aes(message.value, dh_shared_secret)

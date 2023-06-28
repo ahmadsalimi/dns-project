@@ -138,6 +138,7 @@ JET_SIDE_MENU_CUSTOM_APPS = [
         'Session',
         'ChatRequest',
         'GroupChat',
+        'Request',
     ]),
     ('auth', [
         'User',

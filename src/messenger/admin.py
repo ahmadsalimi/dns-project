@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from messenger.models import Configuration, ServerKey, Session, ChatRequest, GroupChat
+from messenger.models import Configuration, ServerKey, Session, ChatRequest, GroupChat, Request
 
 
 @admin.register(Configuration)
@@ -39,3 +39,8 @@ class GroupChatAdmin(admin.ModelAdmin):
 
     inlines = [MemberInline]
 
+
+@admin.register(Request)
+class RequestAdmin(admin.ModelAdmin):
+    readonly_fields = ('id', 'requester', 'request_type', 'created_at')
+    list_display = ('requester', 'request_type', 'id', 'created_at')
