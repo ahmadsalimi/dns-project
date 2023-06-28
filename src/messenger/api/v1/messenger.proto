@@ -8,6 +8,7 @@ message TypedMessage {
   string request_id = 1;
   string type = 2;
   bytes value = 3;
+  string mac = 4;
 }
 
 message SignedMessage {

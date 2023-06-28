@@ -19,7 +19,7 @@ from messenger.api.v1 import messenger_pb2 as m
 from messenger.api.v1.messenger_pb2_grpc import MessengerServiceServicer, add_MessengerServiceServicer_to_server
 from messenger.models import Configuration, ServerKey, Session, ChatRequest, GroupChat, GroupChatMember, Request
 from messenger.utils import num2bytes, sha256_hash, sign_message, decrypt_rsa, parse_typed_message, decrypt_aes, \
-    isoftype
+    isoftype, sha256_hmac
 
 
 class MessengerService(MessengerServiceServicer):
@@ -231,6 +231,8 @@ class MessengerService(MessengerServiceServicer):
                 request_id = message.request_id
                 print(f'request id: {request_id}')
                 message.value = decrypt_aes(message.value, dh_shared_secret)
+                if sha256_hmac(dh_shared_secret, message.value).hex() != message.mac:
+                    context.abort(grpc.StatusCode.INVALID_ARGUMENT, 'HMAC verification failed')
                 request = parse_typed_message(message)
                 print('request parsed')
                 response = self.__handle_session_request(request_id, request, user)
