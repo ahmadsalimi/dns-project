@@ -19,13 +19,6 @@ def sha256_hash(message: bytes) -> bytes:
     return digest.finalize()
 
 
-def sha256_hmac(key: bytes, message: bytes) -> bytes:
-    h = hashes.Hash(hashes.SHA256(), backend=default_backend())
-    h.update(key)
-    h.update(message)
-    return h.finalize()
-
-
 def encrypt_aes(plaintext: bytes, key: bytes) -> bytes:
     plaintext = plaintext + b"\x00" * (16 - len(plaintext) % 16)
     iv = key[:16]
@@ -98,14 +91,11 @@ def sign_message(message: google.protobuf.message.Message, private_key: rsa.RSAP
                  aes_key: Optional[bytes] = None) -> m.SignedMessage:
     message_bytes = message.SerializeToString()
     signature = sign(message_bytes, private_key)
-    mac = None
     if aes_key:
-        mac = sha256_hmac(aes_key, message_bytes).hex()
         message_bytes = encrypt_aes(message_bytes, aes_key)
     typed_message = m.TypedMessage(
         type=message.DESCRIPTOR.name,
         value=message_bytes,
-        mac=mac,
     )
     return m.SignedMessage(message=typed_message, signature=signature)
 
@@ -122,8 +112,6 @@ def parse_signed_message(signed_message: m.SignedMessage, public_key: rsa.RSAPub
     message_bytes = signed_message.message.value
     if aes_key:
         message_bytes = decrypt_aes(message_bytes, aes_key)
-        if sha256_hmac(aes_key, message_bytes).hex() != signed_message.message.mac:
-            raise ValueError('Invalid message HMAC')
     signed_message.message.value = message_bytes
     verify_signature(message_bytes, signed_message.signature, public_key)
     return parse_typed_message(signed_message.message)

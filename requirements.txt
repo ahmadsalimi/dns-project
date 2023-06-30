@@ -1,8 +1,6 @@
 cryptography==41.0.1
 Django==4.1.1
 django-4-jet==1.0.9
-sentry-sdk==0.10.2
-ipython
 grpcio==1.51.1
 grpcio-tools==1.46.5
 pymojihash==0.4.0
