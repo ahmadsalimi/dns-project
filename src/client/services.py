@@ -240,6 +240,7 @@ class Session:
         )
         self.rsa_public_key = self.rsa_private_key.public_key()
         self.__closed = False
+        self.reply_attack_protector = ReplyAttackProtector()
 
     def wait(self):
         self.__session_ready_event.wait()
@@ -266,10 +267,14 @@ class Session:
     def __push_responses_to_queue(self, response_iterator: Iterator[m.SignedMessage]):
         try:
             for response in response_iterator:
-                request_id = response.message.request_id
-                response = parse_signed_message(response, self.client.server_rsa_public_key,
-                                                self.client.dh_server_shared_key)
-                self.__responses_queue.put((request_id, response))
+                try:
+                    request_id = response.message.request_id
+                    self.reply_attack_protector.validate_response(request_id, response.message.type)
+                    response = parse_signed_message(response, self.client.server_rsa_public_key,
+                                                    self.client.dh_server_shared_key)
+                    self.__responses_queue.put((request_id, response))
+                except ReplyAttackProtector.Error:
+                    pass
         except grpc._channel._MultiThreadedRendezvous as e:
             if e.code() != grpc.StatusCode.CANCELLED:
                 print(f'Error: {e}')
@@ -461,6 +466,22 @@ class Session:
             y=int.from_bytes(bytes.fromhex(response.dh_public_key_y), 'big'),
             parameter_numbers=self.client.dh_parameters.parameter_numbers(),
         ).public_key(default_backend())
+
+
+class ReplyAttackProtector:
+
+    class Error(Exception):
+        pass
+
+    def __init__(self):
+        self.__lock = threading.Lock()
+        self.responses = set()
+
+    def validate_response(self, request_id: str, message_type: str):
+        with self.__lock:
+            if (request_id, message_type) in self.responses:
+                raise self.Error('Duplicate response')
+            self.responses.add((request_id, message_type))
 
 
 class Client:
