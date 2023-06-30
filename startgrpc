@@ -1,0 +1,8 @@
+#!/bin/bash
+
+wd=$(pwd)
+cd src || exit
+
+./manage.py grpcrunserver --settings e2e_messenger.server_settings "$@"
+
+cd "$wd" || exit

@@ -155,17 +155,10 @@ BASE_URL = f'https://{DOMAINS[0]}'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-CSRF_TRUSTED_ORIGINS = [
-    f'https://*.{domain}' for domain in DOMAINS
-]
 
 X_FRAME_OPTIONS = 'ALLOWALL'
 
