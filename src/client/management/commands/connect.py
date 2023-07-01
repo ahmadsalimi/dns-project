@@ -1,78 +1,116 @@
 import argparse
 import cmd
 import re
-from typing import Union
-
-from client.services import Client, Session, Chat, GroupChat, AdminGroupChat
+from abc import abstractmethod, ABC
+from functools import wraps
+from typing import Union, Optional, Callable
 
 from django.core.management.base import BaseCommand
 
+from client.services import Client, Session, Chat, GroupChat, AdminGroupChat
 
-class ChatShell(cmd.Cmd):
+
+def command(pattern: Optional[str] = None, func: Optional[Callable] = None):
+    @wraps(func)
+    def wrapper(func):
+        def inner(self: 'BaseShell', inp: str):
+            match = re.match(pattern or r'^\s*$', inp)
+            if match:
+                try:
+                    return func(self, **match.groupdict())
+                except KeyboardInterrupt:
+                    pass
+                except EOFError:
+                    return True
+                except Exception as e:
+                    self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
+            else:
+                self.stdout.write(self.command.style.ERROR('Invalid command') + '\n')
+                self.do_help('')
+
+        return inner
+
+    if func:
+        return wrapper(func)
+    return wrapper
+
+
+class BaseShell(cmd.Cmd, ABC):
+
+    def __init__(self, command: BaseCommand, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.command = command
+
+    @abstractmethod
+    def do_exit(self, inp):
+        pass
+
+    def cmdloop(self, *args, **kwargs):
+        try:
+            return super().cmdloop(*args, **kwargs)
+        except KeyboardInterrupt:
+            self.do_exit('')
+
+
+class ChatShell(BaseShell):
     intro = 'Welcome to the Chat shell.   Type help or ? to list commands.\n'
     file = None
 
     def __init__(self, chat: Chat, command: BaseCommand):
         self.prompt = f'(chat {chat.session.user_id} -> {chat.other_user_id} {chat.get_emoticons()}) '
-        super().__init__()
+        super().__init__(command)
         self.chat = chat
-        self.command = command
 
     def postcmd(self, stop: bool, line: str) -> bool:
         self.prompt = f'(chat {self.chat.session.user_id} -> {self.chat.other_user_id} {self.chat.get_emoticons()}) '
         return super().postcmd(stop, line)
 
-    def do_exit(self, inp):
+    @command()
+    def do_exit(self):
         self.stdout.write(self.command.style.SUCCESS('Closing chat') + '\n')
         return True
 
-    def do_send(self, inp):
-        try:
-            self.chat.send_message(inp)
-        except Exception as e:
-            self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
+    @command(r'^(?P<message>.+)$')
+    def do_send(self, message: str):
+        self.chat.send_message(message)
 
-    def do_refresh_dh_key(self, inp):
-        try:
-            self.chat.session.refresh_dh_key()
-            self.stdout.write(self.command.style.SUCCESS('DH key refreshed') + '\n')
-        except Exception as e:
-            self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
+    @command()
+    def do_refresh_dh_key(self):
+        self.chat.session.refresh_dh_key()
+        self.stdout.write(self.command.style.SUCCESS('DH key refreshed') + '\n')
 
 
-class GroupChatShell(cmd.Cmd):
+class GroupChatShell(BaseShell):
     intro = 'Welcome to the GroupChat shell.   Type help or ? to list commands.\n'
     file = None
 
     def __init__(self, chat: Union[GroupChat, AdminGroupChat], command: BaseCommand):
         self.prompt = f'(groupchat {chat.session.user_id} -> {chat.group_id}) '
-        super().__init__()
+        super().__init__(command)
         self.chat = chat
-        self.command = command
 
-    def do_exit(self, inp):
+    @command()
+    def do_exit(self):
         self.stdout.write(self.command.style.SUCCESS('Closing groupchat') + '\n')
         return True
 
-    def do_send(self, inp):
-        try:
-            self.chat.send_message(inp)
-        except Exception as e:
-            self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
+    @command(r'^(?P<message>.+)$')
+    def do_send(self, message: str):
+        self.chat.send_message(message)
 
-    def do_refresh_dh_key(self, inp):
-        try:
-            self.chat.session.refresh_dh_key()
-            self.stdout.write(self.command.style.SUCCESS('DH key refreshed') + '\n')
-        except Exception as e:
-            self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
+    @command()
+    def do_refresh_dh_key(self):
+        self.chat.session.refresh_dh_key()
+        self.stdout.write(self.command.style.SUCCESS('DH key refreshed') + '\n')
 
-    def do_members(self, inp):
+    @command()
+    def do_members(self):
         self.stdout.write(self.command.style.SUCCESS(self.chat.session.user_id) + '\n')
         for member in self.chat.other_members:
             self.stdout.write(self.command.style.SUCCESS(member) + '\n')
 
-    def do_emoticons(self, inp):
+    @command()
+    def do_emoticons(self):
         for other_member, emoticons in self.chat.get_emoticons().items():
             self.stdout.write(self.command.style.SUCCESS(f'{other_member}: {emoticons}') + '\n')
 
@@ -83,143 +121,102 @@ class AdminGroupChatShell(GroupChatShell):
         super().__init__(chat, command)
         self.prompt = f'(groupchat {chat.session.user_id} -> {chat.group_id} [admin]) '
 
-    def do_add_member(self, inp):
-        try:
-            self.chat.add_member(inp)
-        except Exception as e:
-            self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
+    @command(r'^(?P<user_id>.+)$')
+    def do_add_member(self, user_id: str):
+        self.chat.add_member(user_id)
 
-    def do_remove_member(self, inp):
-        try:
-            self.chat.remove_member(inp)
-        except Exception as e:
-            self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
+    @command(r'^(?P<user_id>.+)$')
+    def do_remove_member(self, user_id: str):
+        self.chat.remove_member(user_id)
 
 
-class SessionShell(cmd.Cmd):
+class SessionShell(BaseShell):
     intro = 'Welcome to the Session shell.   Type help or ? to list commands.\n'
     file = None
 
     def __init__(self, session: Session, command: BaseCommand):
         self.prompt = f'(session {session.user_id}) '
-        super().__init__()
+        super().__init__(command)
         self.session = session
-        self.command = command
 
-    def do_exit(self, inp):
+    @command()
+    def do_exit(self):
         self.stdout.write(self.command.style.SUCCESS('Closing session') + '\n')
         return True
 
-    def do_list_online_users(self, inp):
-        try:
-            users = self.session.list_online_users()
-            for user in users:
-                self.stdout.write(self.command.style.SUCCESS(user) + '\n')
-        except Exception as e:
-            self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
+    @command()
+    def do_list_online_users(self):
+        users = self.session.list_online_users()
+        for user in users:
+            self.stdout.write(self.command.style.SUCCESS(user) + '\n')
 
-    def do_refresh_dh_key(self, inp):
-        try:
-            self.session.refresh_dh_key()
-            self.stdout.write(self.command.style.SUCCESS('DH key refreshed') + '\n')
-        except Exception as e:
-            self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
+    @command()
+    def do_refresh_dh_key(self):
+        self.session.refresh_dh_key()
+        self.stdout.write(self.command.style.SUCCESS('DH key refreshed') + '\n')
 
-    def do_list_chats(self, inp):
-        try:
-            chats = self.session.list_chats()
-            for chat in chats:
-                self.stdout.write(self.command.style.SUCCESS(chat) + '\n')
-        except Exception as e:
-            self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
+    @command()
+    def do_list_chats(self):
+        chats = self.session.list_chats()
+        for chat in chats:
+            self.stdout.write(self.command.style.SUCCESS(chat) + '\n')
 
-    def do_start_chat(self, inp):
-        match = re.match(r'^(?P<requestee>\w+)$', inp)
-        if match:
-            try:
-                with self.session.start_chat(**match.groupdict()) as chat:
-                    self.stdout.write(self.command.style.SUCCESS(f'Chat with {chat.other_user_id} started') + '\n')
-                    ChatShell(chat, self.command).cmdloop()
-            except Exception as e:
-                self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
-        else:
-            self.stdout.write(self.command.style.ERROR('Invalid command') + '\n')
+    @command(r'^(?P<requestee>\w+)$')
+    def do_start_chat(self, requestee: str):
+        with self.session.start_chat(requestee) as chat:
+            self.stdout.write(self.command.style.SUCCESS(f'Chat with {chat.other_user_id} started') + '\n')
+            ChatShell(chat, self.command).cmdloop()
 
-    def do_create_group(self, inp):
-        match = re.match(r'^(?P<id_>\w+)$', inp)
-        if match:
-            try:
-                with self.session.create_group(**match.groupdict()) as chat:
-                    self.stdout.write(self.command.style.SUCCESS(f'Group chat {chat.group_id} created') + '\n')
-                    AdminGroupChatShell(chat, self.command).cmdloop()
-            except Exception as e:
-                self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
-        else:
-            self.stdout.write(self.command.style.ERROR('Invalid command') + '\n')
+    @command(r'^(?P<id_>\w+)$')
+    def do_create_group(self, id_: str):
+        with self.session.create_group(id_=id_) as chat:
+            self.stdout.write(self.command.style.SUCCESS(f'Group chat {chat.group_id} created') + '\n')
+            AdminGroupChatShell(chat, self.command).cmdloop()
 
-    def do_list_groups(self, inp):
-        try:
-            for group in self.session.list_my_groups():
-                self.stdout.write(self.command.style.SUCCESS(group) + '\n')
-        except Exception as e:
-            self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
+    @command()
+    def do_list_groups(self):
+        for group in self.session.list_my_groups():
+            self.stdout.write(self.command.style.SUCCESS(group) + '\n')
 
-    def do_enter_group(self, inp):
-        match = re.match(r'^(?P<group_id>\w+)$', inp)
-        if match:
-            try:
-                with self.session.get_group_chat(**match.groupdict()) as chat:
-                    self.stdout.write(self.command.style.SUCCESS(f'Group chat {chat.group_id} entered') +
-                                      '\n')
-                    if isinstance(chat, AdminGroupChat):
-                        AdminGroupChatShell(chat, self.command).cmdloop()
-                    else:
-                        GroupChatShell(chat, self.command).cmdloop()
-            except Exception as e:
-                self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
-        else:
-            self.stdout.write(self.command.style.ERROR('Invalid command') + '\n')
+    @command(r'^(?P<group_id>\w+)$')
+    def do_enter_group(self, group_id: str):
+        with self.session.get_group_chat(group_id) as chat:
+            self.stdout.write(self.command.style.SUCCESS(f'Group chat {chat.group_id} entered') +
+                              '\n')
+            if isinstance(chat, AdminGroupChat):
+                AdminGroupChatShell(chat, self.command).cmdloop()
+            else:
+                GroupChatShell(chat, self.command).cmdloop()
 
 
-class MessengerShell(cmd.Cmd):
+class MessengerShell(BaseShell):
     intro = 'Welcome to the Messenger shell.   Type help or ? to list commands.\n'
     prompt = '(messenger client) '
     file = None
 
     def __init__(self, client: Client, command: BaseCommand):
-        super().__init__()
+        super().__init__(command)
         self.client = client
-        self.command = command
 
-    def do_exit(self, inp):
+    @command()
+    def do_exit(self):
         self.command.stdout.write(self.command.style.SUCCESS('Bye') + '\n')
         return True
 
-    def do_register(self, inp):
-        match = re.match(r'^(?P<id_>\w+) (?P<password>\S+)$', inp)
-        if match:
-            try:
-                self.client.register(**match.groupdict())
-                self.stdout.write(self.command.style.SUCCESS('Registered') + '\n')
-            except Exception as e:
-                self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
-        else:
-            self.stdout.write(self.command.style.ERROR('Invalid command') + '\n')
+    @command(r'^(?P<id_>\w+) (?P<password>\S+)$')
+    def do_register(self, id_: str, password: str):
+        self.client.register(id_, password)
+        self.stdout.write(self.command.style.SUCCESS('Registered') + '\n')
 
-    def do_start_session(self, inp):
-        match = re.match(r'^(?P<id_>\w+) (?P<password>\S+)$', inp)
-        if match:
-            try:
-                with self.client.start_session(**match.groupdict()) as session:
-                    self.stdout.write(self.command.style.SUCCESS('Session started') + '\n')
-                    SessionShell(session, self.command).cmdloop()
-            except RuntimeError as e:
-                if e.args[0] != 'Client is closed':
-                    raise
-            except Exception as e:
-                self.stdout.write(self.command.style.ERROR(str(e)) + '\n')
-        else:
-            self.stdout.write(self.command.style.ERROR('Invalid command') + '\n')
+    @command(r'^(?P<id_>\w+) (?P<password>\S+)$')
+    def do_start_session(self, id_: str, password: str):
+        try:
+            with self.client.start_session(id_, password) as session:
+                self.stdout.write(self.command.style.SUCCESS('Session started') + '\n')
+                SessionShell(session, self.command).cmdloop()
+        except RuntimeError as e:
+            if e.args[0] != 'Client is closed':
+                raise
 
 
 class Command(BaseCommand):
