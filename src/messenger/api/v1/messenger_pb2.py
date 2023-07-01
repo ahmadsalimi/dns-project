@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n messenger/api/v1/messenger.proto\x12\x02v1\x1a\x1fgoogle/protobuf/timestamp.proto\"?\n\x0cTypedMessage\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\x0c\"E\n\rSignedMessage\x12!\n\x07message\x18\x02 \x01(\x0b\x32\x10.v1.TypedMessage\x12\x11\n\tsignature\x18\x03 \x01(\t\"\x18\n\x16GetRSAPublicKeyRequest\"&\n\x17GetRSAPublicKeyResponse\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x18\n\x16GetDHParametersRequest\":\n\x17GetDHParametersResponse\x12\t\n\x01p\x18\x01 \x01(\t\x12\t\n\x01g\x18\x02 \x01(\x05\x12\t\n\x01q\x18\x03 \x01(\t\"\x17\n\x15GetDHPublicKeyRequest\"#\n\x16GetDHPublicKeyResponse\x12\t\n\x01y\x18\x01 \x01(\t\"H\n\x0fRegisterRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\x12\x0c\n\x04hmac\x18\x03 \x01(\t\"\x12\n\x10RegisterResponse\"h\n\x0cLoginRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\x12\x16\n\x0ersa_public_key\x18\x04 \x01(\t\"\x0f\n\rLoginResponse\"\x1e\n\x0b\x45\x63hoMessage\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x18\n\x16ListOnlineUsersRequest\"+\n\x17ListOnlineUsersResponse\x12\x10\n\x08user_ids\x18\x01 \x03(\t\"*\n\x15\x43hatRequestFromClient\x12\x11\n\trequestee\x18\x01 \x01(\t\"C\n\x15\x43hatRequestFromServer\x12\x11\n\trequester\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\"1\n\x1d\x43hatRequestFromServerResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x02 \x01(\x08\"g\n\x1d\x43hatRequestFromClientResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x05\x65rror\x18\x02 \x01(\tH\x00\x12\x19\n\x0f\x64h_public_key_y\x18\x03 \x01(\tH\x00\x42\x08\n\x06result\"F\n\x13\x43hatMessageToServer\x12\x13\n\x0b\x64\x65stination\x18\x01 \x01(\t\x12\x1a\n\x12message_ciphertext\x18\x03 \x01(\t\"g\n\x13\x43hatMessageResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12-\n\ttimestamp\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"p\n\x13\x43hatMessageToClient\x12\x0e\n\x06source\x18\x01 \x01(\t\x12-\n\ttimestamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x1a\n\x12message_ciphertext\x18\x03 \x01(\t\"6\n\x1bRefreshDHKeyRequestToServer\x12\x17\n\x0f\x64h_public_key_y\x18\x01 \x01(\t\"I\n\x1bRefreshDHKeyRequestToClient\x12\x11\n\trequester\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\" \n\x12\x43reateGroupRequest\x12\n\n\x02id\x18\x01 \x01(\t\"8\n\x13\x43reateGroupResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x03 \x01(\t\"\x13\n\x11ListGroupsRequest\"@\n\x05Group\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07members\x18\x02 \x03(\t\x12\x1a\n\x12is_requester_admin\x18\x03 \x01(\x08\"/\n\x12ListGroupsResponse\x12\x19\n\x06groups\x18\x01 \x03(\x0b\x32\t.v1.Group\"&\n\x13GetPublicKeyRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\"R\n\x14GetPublicKeyResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\x17\n\x0f\x64h_public_key_y\x18\x02 \x01(\t\x12\r\n\x05\x65rror\x18\x03 \x01(\t\"B\n\x1d\x41\x64\x64GroupMemberRequestToServer\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\";\n\x16\x41\x64\x64GroupMemberResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"9\n\x1d\x41\x64\x64GroupMemberRequestToClient\x12\x18\n\x05group\x18\x01 \x01(\x0b\x32\t.v1.Group\"B\n\x1d\x41\x64\x64NewGroupMemberNotification\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\"W\n\x18GroupChatMessageToServer\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12)\n\x08messages\x18\x03 \x03(\x0b\x32\x17.v1.ChatMessageToServer\"l\n\x18GroupChatMessageResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12-\n\ttimestamp\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"V\n\x18GroupChatMessageToClient\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12(\n\x07message\x18\x03 \x01(\x0b\x32\x17.v1.ChatMessageToClient\"B\n\x1dRemoveGroupMemberNotification\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\"I\n$RemoveMemberFromGroupRequestToServer\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\"B\n\x1dRemoveMemberFromGroupResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"8\n$RemoveMemberFromGroupRequestToClient\x12\x10\n\x08group_id\x18\x01 \x01(\t\"\x1a\n\x18SessionReadyNotification2\xd1\x02\n\x10MessengerService\x12J\n\x0fGetRSAPublicKey\x12\x1a.v1.GetRSAPublicKeyRequest\x1a\x1b.v1.GetRSAPublicKeyResponse\x12@\n\x0fGetDHParameters\x12\x1a.v1.GetDHParametersRequest\x1a\x11.v1.SignedMessage\x12>\n\x0eGetDHPublicKey\x12\x19.v1.GetDHPublicKeyRequest\x1a\x11.v1.SignedMessage\x12\x35\n\x08Register\x12\x13.v1.RegisterRequest\x1a\x14.v1.RegisterResponse\x12\x38\n\x0cStartSession\x12\x11.v1.SignedMessage\x1a\x11.v1.SignedMessage(\x01\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n messenger/api/v1/messenger.proto\x12\x02v1\x1a\x1fgoogle/protobuf/timestamp.proto\"?\n\x0cTypedMessage\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\x0c\"E\n\rSignedMessage\x12!\n\x07message\x18\x02 \x01(\x0b\x32\x10.v1.TypedMessage\x12\x11\n\tsignature\x18\x03 \x01(\t\"\x18\n\x16GetRSAPublicKeyRequest\"&\n\x17GetRSAPublicKeyResponse\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x18\n\x16GetDHParametersRequest\":\n\x17GetDHParametersResponse\x12\t\n\x01p\x18\x01 \x01(\t\x12\t\n\x01g\x18\x02 \x01(\x05\x12\t\n\x01q\x18\x03 \x01(\t\"\x17\n\x15GetDHPublicKeyRequest\"#\n\x16GetDHPublicKeyResponse\x12\t\n\x01y\x18\x01 \x01(\t\":\n\x0fRegisterRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\"\x12\n\x10RegisterResponse\"\'\n\nPublicKeys\x12\x0c\n\x04\x64h_y\x18\x01 \x01(\t\x12\x0b\n\x03rsa\x18\x02 \x01(\t\"\\\n\x0cLoginRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x1b\n\x13password_ciphertext\x18\x02 \x01(\t\x12#\n\x0bpublic_keys\x18\x03 \x01(\x0b\x32\x0e.v1.PublicKeys\"\x0f\n\rLoginResponse\"\x1e\n\x0b\x45\x63hoMessage\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x18\n\x16ListOnlineUsersRequest\"+\n\x17ListOnlineUsersResponse\x12\x10\n\x08user_ids\x18\x01 \x03(\t\"*\n\x15\x43hatRequestFromClient\x12\x11\n\trequestee\x18\x01 \x01(\t\"O\n\x15\x43hatRequestFromServer\x12\x11\n\trequester\x18\x02 \x01(\t\x12#\n\x0bpublic_keys\x18\x03 \x01(\x0b\x32\x0e.v1.PublicKeys\"1\n\x1d\x43hatRequestFromServerResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x02 \x01(\x08\"s\n\x1d\x43hatRequestFromClientResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x05\x65rror\x18\x02 \x01(\tH\x00\x12%\n\x0bpublic_keys\x18\x03 \x01(\x0b\x32\x0e.v1.PublicKeysH\x00\x42\x08\n\x06result\"a\n\x13\x43hatMessageToServer\x12\x13\n\x0b\x64\x65stination\x18\x01 \x01(\t\x12\x1a\n\x12message_ciphertext\x18\x02 \x01(\t\x12\x19\n\x11message_signature\x18\x03 \x01(\t\"g\n\x13\x43hatMessageResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12-\n\ttimestamp\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\x8a\x01\n\x13\x43hatMessageToClient\x12\x0e\n\x06source\x18\x01 \x01(\t\x12-\n\ttimestamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x1a\n\x12message_ciphertext\x18\x03 \x01(\t\x12\x18\n\x10sender_signature\x18\x04 \x01(\t\"6\n\x1bRefreshDHKeyRequestToServer\x12\x17\n\x0f\x64h_public_key_y\x18\x01 \x01(\t\"I\n\x1bRefreshDHKeyRequestToClient\x12\x11\n\trequester\x18\x02 \x01(\t\x12\x17\n\x0f\x64h_public_key_y\x18\x03 \x01(\t\" \n\x12\x43reateGroupRequest\x12\n\n\x02id\x18\x01 \x01(\t\"8\n\x13\x43reateGroupResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x03 \x01(\t\"\x13\n\x11ListGroupsRequest\"@\n\x05Group\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07members\x18\x02 \x03(\t\x12\x1a\n\x12is_requester_admin\x18\x03 \x01(\x08\"/\n\x12ListGroupsResponse\x12\x19\n\x06groups\x18\x01 \x03(\x0b\x32\t.v1.Group\"&\n\x13GetPublicKeyRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\"^\n\x14GetPublicKeyResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12#\n\x0bpublic_keys\x18\x02 \x01(\x0b\x32\x0e.v1.PublicKeys\x12\r\n\x05\x65rror\x18\x03 \x01(\t\"B\n\x1d\x41\x64\x64GroupMemberRequestToServer\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\";\n\x16\x41\x64\x64GroupMemberResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"9\n\x1d\x41\x64\x64GroupMemberRequestToClient\x12\x18\n\x05group\x18\x01 \x01(\x0b\x32\t.v1.Group\"B\n\x1d\x41\x64\x64NewGroupMemberNotification\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\"W\n\x18GroupChatMessageToServer\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12)\n\x08messages\x18\x02 \x03(\x0b\x32\x17.v1.ChatMessageToServer\"l\n\x18GroupChatMessageResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\x12-\n\ttimestamp\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"V\n\x18GroupChatMessageToClient\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12(\n\x07message\x18\x03 \x01(\x0b\x32\x17.v1.ChatMessageToClient\"B\n\x1dRemoveGroupMemberNotification\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\"I\n$RemoveMemberFromGroupRequestToServer\x12\x10\n\x08group_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\"B\n\x1dRemoveMemberFromGroupResponse\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"8\n$RemoveMemberFromGroupRequestToClient\x12\x10\n\x08group_id\x18\x01 \x01(\t\"\x1a\n\x18SessionReadyNotification2\xd1\x02\n\x10MessengerService\x12J\n\x0fGetRSAPublicKey\x12\x1a.v1.GetRSAPublicKeyRequest\x1a\x1b.v1.GetRSAPublicKeyResponse\x12@\n\x0fGetDHParameters\x12\x1a.v1.GetDHParametersRequest\x1a\x11.v1.SignedMessage\x12>\n\x0eGetDHPublicKey\x12\x19.v1.GetDHPublicKeyRequest\x1a\x11.v1.SignedMessage\x12\x35\n\x08Register\x12\x13.v1.RegisterRequest\x1a\x14.v1.RegisterResponse\x12\x38\n\x0cStartSession\x12\x11.v1.SignedMessage\x1a\x11.v1.SignedMessage(\x01\x30\x01\x62\x06proto3')
 
 
 
@@ -29,6 +29,7 @@ _GETDHPUBLICKEYREQUEST = DESCRIPTOR.message_types_by_name['GetDHPublicKeyRequest
 _GETDHPUBLICKEYRESPONSE = DESCRIPTOR.message_types_by_name['GetDHPublicKeyResponse']
 _REGISTERREQUEST = DESCRIPTOR.message_types_by_name['RegisterRequest']
 _REGISTERRESPONSE = DESCRIPTOR.message_types_by_name['RegisterResponse']
+_PUBLICKEYS = DESCRIPTOR.message_types_by_name['PublicKeys']
 _LOGINREQUEST = DESCRIPTOR.message_types_by_name['LoginRequest']
 _LOGINRESPONSE = DESCRIPTOR.message_types_by_name['LoginResponse']
 _ECHOMESSAGE = DESCRIPTOR.message_types_by_name['EchoMessage']
@@ -131,6 +132,13 @@ RegisterResponse = _reflection.GeneratedProtocolMessageType('RegisterResponse', 
   # @@protoc_insertion_point(class_scope:v1.RegisterResponse)
   })
 _sym_db.RegisterMessage(RegisterResponse)
+
+PublicKeys = _reflection.GeneratedProtocolMessageType('PublicKeys', (_message.Message,), {
+  'DESCRIPTOR' : _PUBLICKEYS,
+  '__module__' : 'messenger.api.v1.messenger_pb2'
+  # @@protoc_insertion_point(class_scope:v1.PublicKeys)
+  })
+_sym_db.RegisterMessage(PublicKeys)
 
 LoginRequest = _reflection.GeneratedProtocolMessageType('LoginRequest', (_message.Message,), {
   'DESCRIPTOR' : _LOGINREQUEST,
@@ -384,75 +392,77 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _GETDHPUBLICKEYRESPONSE._serialized_start=386
   _GETDHPUBLICKEYRESPONSE._serialized_end=421
   _REGISTERREQUEST._serialized_start=423
-  _REGISTERREQUEST._serialized_end=495
-  _REGISTERRESPONSE._serialized_start=497
-  _REGISTERRESPONSE._serialized_end=515
-  _LOGINREQUEST._serialized_start=517
-  _LOGINREQUEST._serialized_end=621
-  _LOGINRESPONSE._serialized_start=623
-  _LOGINRESPONSE._serialized_end=638
-  _ECHOMESSAGE._serialized_start=640
-  _ECHOMESSAGE._serialized_end=670
-  _LISTONLINEUSERSREQUEST._serialized_start=672
-  _LISTONLINEUSERSREQUEST._serialized_end=696
-  _LISTONLINEUSERSRESPONSE._serialized_start=698
-  _LISTONLINEUSERSRESPONSE._serialized_end=741
-  _CHATREQUESTFROMCLIENT._serialized_start=743
-  _CHATREQUESTFROMCLIENT._serialized_end=785
-  _CHATREQUESTFROMSERVER._serialized_start=787
-  _CHATREQUESTFROMSERVER._serialized_end=854
-  _CHATREQUESTFROMSERVERRESPONSE._serialized_start=856
-  _CHATREQUESTFROMSERVERRESPONSE._serialized_end=905
-  _CHATREQUESTFROMCLIENTRESPONSE._serialized_start=907
-  _CHATREQUESTFROMCLIENTRESPONSE._serialized_end=1010
-  _CHATMESSAGETOSERVER._serialized_start=1012
-  _CHATMESSAGETOSERVER._serialized_end=1082
-  _CHATMESSAGERESPONSE._serialized_start=1084
-  _CHATMESSAGERESPONSE._serialized_end=1187
-  _CHATMESSAGETOCLIENT._serialized_start=1189
-  _CHATMESSAGETOCLIENT._serialized_end=1301
-  _REFRESHDHKEYREQUESTTOSERVER._serialized_start=1303
-  _REFRESHDHKEYREQUESTTOSERVER._serialized_end=1357
-  _REFRESHDHKEYREQUESTTOCLIENT._serialized_start=1359
-  _REFRESHDHKEYREQUESTTOCLIENT._serialized_end=1432
-  _CREATEGROUPREQUEST._serialized_start=1434
-  _CREATEGROUPREQUEST._serialized_end=1466
-  _CREATEGROUPRESPONSE._serialized_start=1468
-  _CREATEGROUPRESPONSE._serialized_end=1524
-  _LISTGROUPSREQUEST._serialized_start=1526
-  _LISTGROUPSREQUEST._serialized_end=1545
-  _GROUP._serialized_start=1547
-  _GROUP._serialized_end=1611
-  _LISTGROUPSRESPONSE._serialized_start=1613
-  _LISTGROUPSRESPONSE._serialized_end=1660
-  _GETPUBLICKEYREQUEST._serialized_start=1662
-  _GETPUBLICKEYREQUEST._serialized_end=1700
-  _GETPUBLICKEYRESPONSE._serialized_start=1702
-  _GETPUBLICKEYRESPONSE._serialized_end=1784
-  _ADDGROUPMEMBERREQUESTTOSERVER._serialized_start=1786
-  _ADDGROUPMEMBERREQUESTTOSERVER._serialized_end=1852
-  _ADDGROUPMEMBERRESPONSE._serialized_start=1854
-  _ADDGROUPMEMBERRESPONSE._serialized_end=1913
-  _ADDGROUPMEMBERREQUESTTOCLIENT._serialized_start=1915
-  _ADDGROUPMEMBERREQUESTTOCLIENT._serialized_end=1972
-  _ADDNEWGROUPMEMBERNOTIFICATION._serialized_start=1974
-  _ADDNEWGROUPMEMBERNOTIFICATION._serialized_end=2040
-  _GROUPCHATMESSAGETOSERVER._serialized_start=2042
-  _GROUPCHATMESSAGETOSERVER._serialized_end=2129
-  _GROUPCHATMESSAGERESPONSE._serialized_start=2131
-  _GROUPCHATMESSAGERESPONSE._serialized_end=2239
-  _GROUPCHATMESSAGETOCLIENT._serialized_start=2241
-  _GROUPCHATMESSAGETOCLIENT._serialized_end=2327
-  _REMOVEGROUPMEMBERNOTIFICATION._serialized_start=2329
-  _REMOVEGROUPMEMBERNOTIFICATION._serialized_end=2395
-  _REMOVEMEMBERFROMGROUPREQUESTTOSERVER._serialized_start=2397
-  _REMOVEMEMBERFROMGROUPREQUESTTOSERVER._serialized_end=2470
-  _REMOVEMEMBERFROMGROUPRESPONSE._serialized_start=2472
-  _REMOVEMEMBERFROMGROUPRESPONSE._serialized_end=2538
-  _REMOVEMEMBERFROMGROUPREQUESTTOCLIENT._serialized_start=2540
-  _REMOVEMEMBERFROMGROUPREQUESTTOCLIENT._serialized_end=2596
-  _SESSIONREADYNOTIFICATION._serialized_start=2598
-  _SESSIONREADYNOTIFICATION._serialized_end=2624
-  _MESSENGERSERVICE._serialized_start=2627
-  _MESSENGERSERVICE._serialized_end=2964
+  _REGISTERREQUEST._serialized_end=481
+  _REGISTERRESPONSE._serialized_start=483
+  _REGISTERRESPONSE._serialized_end=501
+  _PUBLICKEYS._serialized_start=503
+  _PUBLICKEYS._serialized_end=542
+  _LOGINREQUEST._serialized_start=544
+  _LOGINREQUEST._serialized_end=636
+  _LOGINRESPONSE._serialized_start=638
+  _LOGINRESPONSE._serialized_end=653
+  _ECHOMESSAGE._serialized_start=655
+  _ECHOMESSAGE._serialized_end=685
+  _LISTONLINEUSERSREQUEST._serialized_start=687
+  _LISTONLINEUSERSREQUEST._serialized_end=711
+  _LISTONLINEUSERSRESPONSE._serialized_start=713
+  _LISTONLINEUSERSRESPONSE._serialized_end=756
+  _CHATREQUESTFROMCLIENT._serialized_start=758
+  _CHATREQUESTFROMCLIENT._serialized_end=800
+  _CHATREQUESTFROMSERVER._serialized_start=802
+  _CHATREQUESTFROMSERVER._serialized_end=881
+  _CHATREQUESTFROMSERVERRESPONSE._serialized_start=883
+  _CHATREQUESTFROMSERVERRESPONSE._serialized_end=932
+  _CHATREQUESTFROMCLIENTRESPONSE._serialized_start=934
+  _CHATREQUESTFROMCLIENTRESPONSE._serialized_end=1049
+  _CHATMESSAGETOSERVER._serialized_start=1051
+  _CHATMESSAGETOSERVER._serialized_end=1148
+  _CHATMESSAGERESPONSE._serialized_start=1150
+  _CHATMESSAGERESPONSE._serialized_end=1253
+  _CHATMESSAGETOCLIENT._serialized_start=1256
+  _CHATMESSAGETOCLIENT._serialized_end=1394
+  _REFRESHDHKEYREQUESTTOSERVER._serialized_start=1396
+  _REFRESHDHKEYREQUESTTOSERVER._serialized_end=1450
+  _REFRESHDHKEYREQUESTTOCLIENT._serialized_start=1452
+  _REFRESHDHKEYREQUESTTOCLIENT._serialized_end=1525
+  _CREATEGROUPREQUEST._serialized_start=1527
+  _CREATEGROUPREQUEST._serialized_end=1559
+  _CREATEGROUPRESPONSE._serialized_start=1561
+  _CREATEGROUPRESPONSE._serialized_end=1617
+  _LISTGROUPSREQUEST._serialized_start=1619
+  _LISTGROUPSREQUEST._serialized_end=1638
+  _GROUP._serialized_start=1640
+  _GROUP._serialized_end=1704
+  _LISTGROUPSRESPONSE._serialized_start=1706
+  _LISTGROUPSRESPONSE._serialized_end=1753
+  _GETPUBLICKEYREQUEST._serialized_start=1755
+  _GETPUBLICKEYREQUEST._serialized_end=1793
+  _GETPUBLICKEYRESPONSE._serialized_start=1795
+  _GETPUBLICKEYRESPONSE._serialized_end=1889
+  _ADDGROUPMEMBERREQUESTTOSERVER._serialized_start=1891
+  _ADDGROUPMEMBERREQUESTTOSERVER._serialized_end=1957
+  _ADDGROUPMEMBERRESPONSE._serialized_start=1959
+  _ADDGROUPMEMBERRESPONSE._serialized_end=2018
+  _ADDGROUPMEMBERREQUESTTOCLIENT._serialized_start=2020
+  _ADDGROUPMEMBERREQUESTTOCLIENT._serialized_end=2077
+  _ADDNEWGROUPMEMBERNOTIFICATION._serialized_start=2079
+  _ADDNEWGROUPMEMBERNOTIFICATION._serialized_end=2145
+  _GROUPCHATMESSAGETOSERVER._serialized_start=2147
+  _GROUPCHATMESSAGETOSERVER._serialized_end=2234
+  _GROUPCHATMESSAGERESPONSE._serialized_start=2236
+  _GROUPCHATMESSAGERESPONSE._serialized_end=2344
+  _GROUPCHATMESSAGETOCLIENT._serialized_start=2346
+  _GROUPCHATMESSAGETOCLIENT._serialized_end=2432
+  _REMOVEGROUPMEMBERNOTIFICATION._serialized_start=2434
+  _REMOVEGROUPMEMBERNOTIFICATION._serialized_end=2500
+  _REMOVEMEMBERFROMGROUPREQUESTTOSERVER._serialized_start=2502
+  _REMOVEMEMBERFROMGROUPREQUESTTOSERVER._serialized_end=2575
+  _REMOVEMEMBERFROMGROUPRESPONSE._serialized_start=2577
+  _REMOVEMEMBERFROMGROUPRESPONSE._serialized_end=2643
+  _REMOVEMEMBERFROMGROUPREQUESTTOCLIENT._serialized_start=2645
+  _REMOVEMEMBERFROMGROUPREQUESTTOCLIENT._serialized_end=2701
+  _SESSIONREADYNOTIFICATION._serialized_start=2703
+  _SESSIONREADYNOTIFICATION._serialized_end=2729
+  _MESSENGERSERVICE._serialized_start=2732
+  _MESSENGERSERVICE._serialized_end=3069
 # @@protoc_insertion_point(module_scope)

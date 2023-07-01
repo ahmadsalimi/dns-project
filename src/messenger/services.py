@@ -154,14 +154,14 @@ class MessengerService(MessengerServiceServicer):
                           f'Expected {m.LoginRequest.DESCRIPTOR.name}, got {m1.message.type}')
         login_request = parse_typed_message(m1.message)
         rsa_public_key = load_pem_public_key(
-            bytes.fromhex(login_request.rsa_public_key),
+            bytes.fromhex(login_request.public_keys.rsa),
             default_backend(),
         )
         verify_signature(m1.message.value + m1.message.request_id.encode() + m1.message.type.encode(),
                          m1.signature, rsa_public_key)
 
         id_ = login_request.id
-        dh_public_key_y = int.from_bytes(bytes.fromhex(login_request.dh_public_key_y), 'big')
+        dh_public_key_y = int.from_bytes(bytes.fromhex(login_request.public_keys.dh_y), 'big')
         dh_public_key = dh.DHPublicNumbers(y=dh_public_key_y,
                                            parameter_numbers=self.dh_parameters.parameter_numbers()) \
             .public_key(default_backend())
@@ -181,7 +181,7 @@ class MessengerService(MessengerServiceServicer):
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PublicFormat.SubjectPublicKeyInfo,
             ),
-            rsa_public_key=bytes.fromhex(login_request.rsa_public_key),
+            rsa_public_key=bytes.fromhex(login_request.public_keys.rsa),
             dh_shared_secret=dh_shared_secret,
         )
         self.__response_queues[user.username] = response_queue = queue.Queue()
@@ -283,7 +283,10 @@ class MessengerService(MessengerServiceServicer):
             )
             self.__response_queues[request.requestee].put((request_id, m.ChatRequestFromServer(
                 requester=user.username,
-                dh_public_key_y=num2bytes(user.session.parsed_dh_public_key.public_numbers().y).hex(),
+                public_keys=m.PublicKeys(
+                    dh_y=num2bytes(user.session.parsed_dh_public_key.public_numbers().y).hex(),
+                    rsa=user.session.rsa_public_key.hex(),
+                ),
             )))
             return
         elif request.DESCRIPTOR.name == m.ChatRequestFromServerResponse.DESCRIPTOR.name:
@@ -303,7 +306,10 @@ class MessengerService(MessengerServiceServicer):
                 return
             self.__response_queues[chat_request.requester.username].put((request_id, m.ChatRequestFromClientResponse(
                 accepted=True,
-                dh_public_key_y=num2bytes(user.session.parsed_dh_public_key.public_numbers().y).hex(),
+                public_keys=m.PublicKeys(
+                    dh_y=num2bytes(user.session.parsed_dh_public_key.public_numbers().y).hex(),
+                    rsa=user.session.rsa_public_key.hex(),
+                ),
             )))
             chat_request.status = ChatRequest.Status.ACCEPTED
             chat_request.save()
@@ -323,6 +329,7 @@ class MessengerService(MessengerServiceServicer):
                 source=user.username,
                 timestamp=timestamp,
                 message_ciphertext=request.message_ciphertext,
+                sender_signature=request.message_signature,
             )))
             return m.ChatMessageResponse(
                 successful=True,
@@ -379,10 +386,13 @@ class MessengerService(MessengerServiceServicer):
                     successful=False,
                     error=f'User {request.user_id} either does not exist or is offline',
                 )
+            session = Session.objects.get(user__username=request.user_id)
             return m.GetPublicKeyResponse(
                 successful=True,
-                dh_public_key_y=num2bytes(Session.objects.get(user__username=request.user_id)
-                                          .parsed_dh_public_key.public_numbers().y).hex(),
+                public_keys=m.PublicKeys(
+                    dh_y=num2bytes(session.parsed_dh_public_key.public_numbers().y).hex(),
+                    rsa=session.rsa_public_key.hex(),
+                ),
             )
         elif request.DESCRIPTOR.name == m.AddGroupMemberRequestToServer.DESCRIPTOR.name:
             if not Session.objects.filter(user__username=request.user_id).exists():
@@ -439,6 +449,7 @@ class MessengerService(MessengerServiceServicer):
                         source=user.username,
                         timestamp=timestamp,
                         message_ciphertext=message.message_ciphertext,
+                        sender_signature=message.message_signature,
                     ),
                 )))
             return m.GroupChatMessageResponse(

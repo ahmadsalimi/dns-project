@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Iterator, Dict, Optional, List, Union, Tuple
 
+from cryptography.exceptions import InvalidSignature
 from pymojihash import hash_to_emoji
 from google.protobuf.message import Message
 from cryptography.hazmat.backends import default_backend
@@ -17,46 +18,45 @@ import grpc
 from messenger.api.v1 import messenger_pb2 as m
 from messenger.api.v1.messenger_pb2_grpc import MessengerServiceStub
 from messenger.utils import parse_signed_message, encrypt_rsa, encrypt_aes, num2bytes, sha256_hash, decrypt_aes, \
-    sign_message
+    sign_message, sign, verify_signature
 
 
 @dataclass
 class PeerData:
     id: str
-    public_key: dh.DHPublicKey
+    dh_public_key: dh.DHPublicKey
     shared_secret: bytes
+    rsa_public_key: rsa.RSAPublicKey
 
     @classmethod
     def from_public_key_y(cls, name: str,
-                          peer_public_key_y: str,
-                          parameters: dh.DHParameters,
-                          my_private_key: dh.DHPrivateKey):
-        peer_public_key = dh.DHPublicNumbers(
-            y=int.from_bytes(bytes.fromhex(peer_public_key_y), 'big'),
-            parameter_numbers=parameters.parameter_numbers(),
+                          peer_rsa_public_key: str,
+                          peer_dh_public_key_y: str,
+                          dh_parameters: dh.DHParameters,
+                          my_dh_private_key: dh.DHPrivateKey):
+        peer_dh_public_key = dh.DHPublicNumbers(
+            y=int.from_bytes(bytes.fromhex(peer_dh_public_key_y), 'big'),
+            parameter_numbers=dh_parameters.parameter_numbers(),
         ).public_key(default_backend())
-        shared_secret = sha256_hash(my_private_key.exchange(peer_public_key))
-        return cls(name, peer_public_key, shared_secret)
-
-    @classmethod
-    def from_public_key(cls, name: str,
-                        peer_public_key: dh.DHPublicKey,
-                        my_private_key: dh.DHPrivateKey):
-        shared_secret = sha256_hash(my_private_key.exchange(peer_public_key))
-        return cls(name, peer_public_key, shared_secret)
+        shared_secret = sha256_hash(my_dh_private_key.exchange(peer_dh_public_key))
+        peer_rsa_public_key = load_pem_public_key(
+            bytes.fromhex(peer_rsa_public_key),
+            backend=default_backend(),
+        )
+        return cls(name, peer_dh_public_key, shared_secret, peer_rsa_public_key)
 
     def refresh(self, my_private_key: dh.DHPrivateKey, parameters: dh.DHParameters,
                 peer_public_key_y: Optional[str] = None):
         if peer_public_key_y:
-            self.public_key = dh.DHPublicNumbers(
+            self.dh_public_key = dh.DHPublicNumbers(
                 y=int.from_bytes(bytes.fromhex(peer_public_key_y), 'big'),
                 parameter_numbers=parameters.parameter_numbers(),
             ).public_key(default_backend())
-        self.shared_secret = sha256_hash(my_private_key.exchange(self.public_key))
+        self.shared_secret = sha256_hash(my_private_key.exchange(self.dh_public_key))
 
     @property
-    def public_key_signature(self) -> str:
-        return sha256_hash(self.public_key.public_bytes(
+    def dh_public_key_signature(self) -> str:
+        return sha256_hash(self.dh_public_key.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
         )).hex()
@@ -86,9 +86,12 @@ class GroupChat:
 
     def confirm_add_member(self, user_id: str):
         self.other_members.add(user_id)
-        self.session.peer_data[user_id] = PeerData.from_public_key(
+        dh_public_key_y, rsa_public_key = self.session.get_public_key(user_id)
+        self.session.peer_data[user_id] = PeerData.from_public_key_y(
             user_id,
-            self.session.get_public_key(user_id),
+            rsa_public_key,
+            dh_public_key_y,
+            self.session.client.dh_parameters,
             self.session.client.dh_private_key,
         )
 
@@ -105,6 +108,8 @@ class GroupChat:
                 m.ChatMessageToServer(
                     destination=member,
                     message_ciphertext=encrypt_aes(message.encode(), self.__get_shared_secret(member)).hex(),
+                    message_signature=sign((self.group_id + self.session.user_id + member + message).encode(),
+                                           self.session.rsa_private_key),
                 )
                 for member in self.other_members
             ]
@@ -117,11 +122,16 @@ class GroupChat:
     def receive_message(self, message: m.ChatMessageToClient):
         message_plaintext = decrypt_aes(bytes.fromhex(message.message_ciphertext),
                                         self.__get_shared_secret(message.source)).decode()
-        date = datetime.fromtimestamp(message.timestamp.seconds + message.timestamp.nanos/1e9)
-        with self.__lock:
-            self.__unseen_messages.append((message_plaintext, message.source, date))
-        if self.__active:
-            self.__print_messages()
+        try:
+            verify_signature((self.group_id + message.source + self.session.user_id + message_plaintext).encode(),
+                             message.sender_signature, self.session.peer_data[message.source].rsa_public_key)
+            date = datetime.fromtimestamp(message.timestamp.seconds + message.timestamp.nanos / 1e9)
+            with self.__lock:
+                self.__unseen_messages.append((message_plaintext, message.source, date))
+            if self.__active:
+                self.__print_messages()
+        except InvalidSignature:
+            pass
 
     def get_emoticons(self):
         return {
@@ -163,12 +173,13 @@ class AdminGroupChat(GroupChat):
 
 class Chat:
 
-    def __init__(self, session: 'Session', other_user_id: str, public_key_y: str):
+    def __init__(self, session: 'Session', other_user_id: str, dh_public_key_y: str, rsa_public_key: str):
         self.session = session
         self.other_user_id = other_user_id
         session.peer_data[other_user_id] = PeerData.from_public_key_y(
             other_user_id,
-            public_key_y,
+            rsa_public_key,
+            dh_public_key_y,
             session.client.dh_parameters,
             session.client.dh_private_key,
         )
@@ -192,6 +203,8 @@ class Chat:
         request = m.ChatMessageToServer(
             destination=self.other_user_id,
             message_ciphertext=encrypt_aes(message.encode(), self.__peer_data.shared_secret).hex(),
+            message_signature=sign((self.session.user_id + self.other_user_id + message).encode(),
+                                   self.session.rsa_private_key),
         )
         response = self.session.blocking_request(request)
         if not response.successful:
@@ -205,11 +218,16 @@ class Chat:
 
     def receive_message(self, response: m.ChatMessageToClient):
         message = decrypt_aes(bytes.fromhex(response.message_ciphertext), self.__peer_data.shared_secret).decode()
-        date = datetime.fromtimestamp(response.timestamp.seconds + response.timestamp.nanos/1e9)
-        with self.__lock:
-            self.__unseen_messages.append((message, date))
-        if self.__active:
-            self.__print_messages()
+        try:
+            verify_signature((response.source + self.session.user_id + message).encode(),
+                             response.sender_signature, self.__peer_data.rsa_public_key)
+            date = datetime.fromtimestamp(response.timestamp.seconds + response.timestamp.nanos/1e9)
+            with self.__lock:
+                self.__unseen_messages.append((message, date))
+            if self.__active:
+                self.__print_messages()
+        except InvalidSignature:
+            pass
 
     def get_emoticons(self):
         shared_secret_hash = sha256_hash(self.__peer_data.shared_secret).hex()
@@ -314,7 +332,9 @@ class Session:
         elif isinstance(response, m.ChatRequestFromServer):
             answer = True
             print(f'Chat request from {response.requester}. Automatically accepting.')
-            self.__chats[response.requester] = Chat(self, response.requester, response.dh_public_key_y)
+            self.__chats[response.requester] = Chat(self, response.requester,
+                                                    response.public_keys.dh_y,
+                                                    response.public_keys.rsa)
             request = m.ChatRequestFromServerResponse(
                 accepted=answer,
             )
@@ -356,11 +376,13 @@ class Session:
         request = m.LoginRequest(
             id=id_,
             password_ciphertext=password_ciphertext,
-            dh_public_key_y=num2bytes(self.client.dh_public_key.public_numbers().y).hex(),
-            rsa_public_key=self.rsa_public_key.public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo,
-            ).hex(),
+            public_keys=m.PublicKeys(
+                dh_y=num2bytes(self.client.dh_public_key.public_numbers().y).hex(),
+                rsa=self.rsa_public_key.public_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PublicFormat.SubjectPublicKeyInfo,
+                ).hex(),
+            ),
         )
         self.user_id = id_
         self.__requests_queue.put((str(uuid.uuid4()), request))
@@ -421,7 +443,7 @@ class Session:
         response = self.blocking_request(request)
         if not response.accepted:
             raise Exception(response.error)
-        self.__chats[requestee] = Chat(self, requestee, response.dh_public_key_y)
+        self.__chats[requestee] = Chat(self, requestee, response.public_keys.dh_y, response.public_keys.rsa)
         return self.__chats[requestee]
 
     def get_chat(self, user_id: str):
@@ -457,15 +479,12 @@ class Session:
     def get_group_chat(self, group_id: str) -> GroupChat:
         return self.__group_chats[group_id]
 
-    def get_public_key(self, user_id: str) -> dh.DHPublicKey:
+    def get_public_key(self, user_id: str) -> Tuple[str, str]:
         request = m.GetPublicKeyRequest(user_id=user_id)
         response = self.blocking_request(request)
         if not response.successful:
             raise Exception(response.error)
-        return dh.DHPublicNumbers(
-            y=int.from_bytes(bytes.fromhex(response.dh_public_key_y), 'big'),
-            parameter_numbers=self.client.dh_parameters.parameter_numbers(),
-        ).public_key(default_backend())
+        return response.public_keys.dh_y, response.public_keys.rsa
 
 
 class ReplyAttackProtector:

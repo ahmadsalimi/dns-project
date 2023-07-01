@@ -46,11 +46,15 @@ message RegisterRequest {
 message RegisterResponse {
 }
 
+message PublicKeys {
+  string dh_y = 1;
+  string rsa = 2;
+}
+
 message LoginRequest {
   string id = 1;
   string password_ciphertext = 2;
-  string dh_public_key_y = 3;
-  string rsa_public_key = 4;
+  PublicKeys public_keys = 3;
 }
 
 message LoginResponse {
@@ -73,7 +77,7 @@ message ChatRequestFromClient {
 
 message ChatRequestFromServer {
   string requester = 2;
-  string dh_public_key_y = 3;
+  PublicKeys public_keys = 3;
 }
 
 message ChatRequestFromServerResponse {
@@ -84,13 +88,14 @@ message ChatRequestFromClientResponse {
   bool accepted = 1;
   oneof result {
     string error = 2;
-    string dh_public_key_y = 3;
+    PublicKeys public_keys = 3;
   }
 }
 
 message ChatMessageToServer {
   string destination = 1;
-  string message_ciphertext = 3;
+  string message_ciphertext = 2;
+  string message_signature = 3;
 }
 
 message ChatMessageResponse {
@@ -103,6 +108,7 @@ message ChatMessageToClient {
   string source = 1;
   google.protobuf.Timestamp timestamp = 2;
   string message_ciphertext = 3;
+  string sender_signature = 4;
 }
 
 message RefreshDHKeyRequestToServer {
@@ -142,7 +148,7 @@ message GetPublicKeyRequest {
 
 message GetPublicKeyResponse {
   bool successful = 1;
-  string dh_public_key_y = 2;
+  PublicKeys public_keys = 2;
   string error = 3;
 }
 
@@ -167,7 +173,7 @@ message AddNewGroupMemberNotification {
 
 message GroupChatMessageToServer {
   string group_id = 1;
-  repeated ChatMessageToServer messages = 3;
+  repeated ChatMessageToServer messages = 2;
 }
 
 message GroupChatMessageResponse {
