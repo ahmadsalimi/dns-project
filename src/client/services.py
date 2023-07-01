@@ -258,8 +258,8 @@ class Session:
                 raise StopIteration
             request_id, request = next_
             signed_message = sign_message(request, self.rsa_private_key,
+                                          request_id,
                                           self.client.dh_server_shared_key if self.__is_logged_in else None)
-            signed_message.message.request_id = request_id
             return signed_message
         except Exception:
             raise StopIteration
@@ -518,7 +518,8 @@ class Client:
             yield MessengerServiceStub(channel)
 
     def register(self, id_: str, password: str):
-        password_ciphertext = encrypt_rsa(password.encode(), self.server_rsa_public_key).hex()
+        id_pass_hash = sha256_hash((id_ + password).encode()).hex()
+        password_ciphertext = encrypt_rsa((password + id_pass_hash).encode(), self.server_rsa_public_key).hex()
         with self.__create_stub() as stub:
             stub.Register(m.RegisterRequest(
                 id=id_,

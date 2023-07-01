@@ -121,7 +121,10 @@ class MessengerService(MessengerServiceServicer):
     def Register(self, request: m.RegisterRequest,
                  context: grpc.ServicerContext) -> m.RegisterResponse:
         id_ = request.id
-        password = decrypt_rsa(bytes.fromhex(request.password_ciphertext), self.rsa_private_key).decode()
+        password_plus_hash = decrypt_rsa(bytes.fromhex(request.password_ciphertext), self.rsa_private_key).decode()
+        password, password_hash = password_plus_hash[:-64], password_plus_hash[-64:]
+        if sha256_hash((id_ + password).encode()).hex() != password_hash:
+            context.abort(grpc.StatusCode.INVALID_ARGUMENT, 'Invalid password ciphertext')
         form = UserCreationForm(dict(
             username=id_,
             password1=password,
@@ -154,7 +157,9 @@ class MessengerService(MessengerServiceServicer):
             bytes.fromhex(login_request.rsa_public_key),
             default_backend(),
         )
-        verify_signature(m1.message.value, m1.signature, rsa_public_key)
+        verify_signature(m1.message.value + m1.message.request_id.encode() + m1.message.type.encode(),
+                         m1.signature, rsa_public_key)
+
         id_ = login_request.id
         dh_public_key_y = int.from_bytes(bytes.fromhex(login_request.dh_public_key_y), 'big')
         dh_public_key = dh.DHPublicNumbers(y=dh_public_key_y,
@@ -187,7 +192,7 @@ class MessengerService(MessengerServiceServicer):
         handle_session_requests_thread.start()
         print(f'User {user.username} started session')
         try:
-            yield sign_message(m.LoginResponse(), self.rsa_private_key, dh_shared_secret)
+            yield sign_message(m.LoginResponse(), self.rsa_private_key, m1.message.request_id, dh_shared_secret)
             print(f'Notifying {user.username}\'s peer users in groups')
             for group in GroupChat.objects.filter(members=user):
                 print(f'Notifying {user.username}\'s peer users in group {group.id}')
@@ -201,11 +206,10 @@ class MessengerService(MessengerServiceServicer):
                             user_id=user.username,
                         ),
                     ))
-            yield sign_message(m.SessionReadyNotification(), self.rsa_private_key, dh_shared_secret)
+            yield sign_message(m.SessionReadyNotification(), self.rsa_private_key, aes_key=dh_shared_secret)
             while (response := response_queue.get()) and response[1] is not None:
-                signed_message = sign_message(response[1], self.rsa_private_key, dh_shared_secret)
+                signed_message = sign_message(response[1], self.rsa_private_key, response[0], dh_shared_secret)
                 print(f'message {response[0]} of type {signed_message.message.type} signed.')
-                signed_message.message.request_id = response[0]
                 yield signed_message
                 print(f'message {response[0]} of type {signed_message.message.type} sent.')
         except Exception as e:

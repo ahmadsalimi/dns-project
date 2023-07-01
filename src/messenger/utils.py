@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional, Type
 
 import google.protobuf.message
@@ -88,13 +89,17 @@ def verify_signature(data: bytes, signature: str, public_key: rsa.RSAPublicKey) 
 
 
 def sign_message(message: google.protobuf.message.Message, private_key: rsa.RSAPrivateKey,
+                 request_id: Optional[str] = None,
                  aes_key: Optional[bytes] = None) -> m.SignedMessage:
     message_bytes = message.SerializeToString()
-    signature = sign(message_bytes, private_key)
+    type_ = message.DESCRIPTOR.name
+    request_id = request_id or str(uuid.uuid4())
+    signature = sign(message_bytes + request_id.encode() + type_.encode(), private_key)
     if aes_key:
         message_bytes = encrypt_aes(message_bytes, aes_key)
     typed_message = m.TypedMessage(
-        type=message.DESCRIPTOR.name,
+        request_id=request_id,
+        type=type_,
         value=message_bytes,
     )
     return m.SignedMessage(message=typed_message, signature=signature)
@@ -113,7 +118,9 @@ def parse_signed_message(signed_message: m.SignedMessage, public_key: rsa.RSAPub
     if aes_key:
         message_bytes = decrypt_aes(message_bytes, aes_key)
     signed_message.message.value = message_bytes
-    verify_signature(message_bytes, signed_message.signature, public_key)
+    verify_signature(message_bytes + signed_message.message.request_id.encode() + signed_message.message.type.encode(),
+                     signed_message.signature,
+                     public_key)
     return parse_typed_message(signed_message.message)
 
 
