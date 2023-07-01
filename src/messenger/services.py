@@ -187,12 +187,12 @@ class MessengerService(MessengerServiceServicer):
         self.__response_queues[user.username] = response_queue = queue.Queue()
         handle_session_requests_thread = threading.Thread(
             target=self.__handle_session_requests,
-            args=(request_iterator, context, response_queue, dh_shared_secret, rsa_public_key, user),
+            args=(request_iterator, context, response_queue, rsa_public_key, user),
         )
         handle_session_requests_thread.start()
         print(f'User {user.username} started session')
         try:
-            yield sign_message(m.LoginResponse(), self.rsa_private_key, m1.message.request_id, dh_shared_secret)
+            yield sign_message(m.LoginResponse(), self.rsa_private_key, m1.message.request_id, session.dh_shared_secret)
             for group in GroupChat.objects.filter(members=user):
                 for other_session in Session.objects.filter(user__in=group.members.all()).exclude(user=user):
                     print(f'Notifying {other_session.user.username} of {user.username}\'s session'
@@ -205,9 +205,9 @@ class MessengerService(MessengerServiceServicer):
                             user_id=user.username,
                         ),
                     ))
-            yield sign_message(m.SessionReadyNotification(), self.rsa_private_key, aes_key=dh_shared_secret)
+            yield sign_message(m.SessionReadyNotification(), self.rsa_private_key, aes_key=session.dh_shared_secret)
             while (response := response_queue.get()) and response[1] is not None:
-                signed_message = sign_message(response[1], self.rsa_private_key, response[0], dh_shared_secret)
+                signed_message = sign_message(response[1], self.rsa_private_key, response[0], session.dh_shared_secret)
                 yield signed_message
         except Exception as e:
             import traceback
@@ -231,14 +231,13 @@ class MessengerService(MessengerServiceServicer):
     def __handle_session_requests(self, request_iterator: Iterator[m.SignedMessage],
                                   context: grpc.ServicerContext,
                                   response_queue: queue.Queue,
-                                  dh_shared_secret: bytes,
                                   rsa_public_key: rsa.RSAPublicKey,
                                   user: User) -> None:
         try:
             for message in request_iterator:
                 self.__log_request(message.message, user, context)
                 request_id = message.message.request_id
-                request = parse_signed_message(message, rsa_public_key, dh_shared_secret)
+                request = parse_signed_message(message, rsa_public_key, user.session.dh_shared_secret)
                 response = self.__handle_session_request(request_id, request, user)
                 if response is None:
                     continue

@@ -259,6 +259,7 @@ class Session:
         self.rsa_public_key = self.rsa_private_key.public_key()
         self.__closed = False
         self.reply_attack_protector = ReplyAttackProtector()
+        self.__refresh_key_event = threading.Event()
 
     def wait(self):
         self.__session_ready_event.wait()
@@ -278,6 +279,8 @@ class Session:
             signed_message = sign_message(request, self.rsa_private_key,
                                           request_id,
                                           self.client.dh_server_shared_key if self.__is_logged_in else None)
+            if request.DESCRIPTOR.name == m.RefreshDHKeyRequestToServer.DESCRIPTOR.name:
+                self.__refresh_key_event.set()
             return signed_message
         except Exception:
             raise StopIteration
@@ -453,12 +456,19 @@ class Session:
         return list(self.__chats.keys())
 
     def refresh_dh_key(self):
-        self.client.dh_private_key = self.client.dh_parameters.generate_private_key()
-        self.client.dh_public_key = self.client.dh_private_key.public_key()
+        new_private_key = self.client.dh_parameters.generate_private_key()
+        new_public_key = new_private_key.public_key()
         request = m.RefreshDHKeyRequestToServer(
-            dh_public_key_y=num2bytes(self.client.dh_public_key.public_numbers().y).hex(),
+            dh_public_key_y=num2bytes(new_public_key.public_numbers().y).hex(),
         )
+
+        self.__refresh_key_event.clear()
         self.async_request(request)
+        self.__refresh_key_event.wait()
+
+        self.client.dh_private_key = new_private_key
+        self.client.dh_public_key = new_public_key
+        self.client.dh_server_shared_key = sha256_hash(new_private_key.exchange(self.client.server_dh_public_key))
         for peer in self.peer_data.values():
             peer.refresh(
                 self.client.dh_private_key,
