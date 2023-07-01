@@ -4,7 +4,7 @@ import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterator, Dict, Optional, List, Union, Tuple
+from typing import Iterator, Dict, Optional, List, Union, Tuple, Set
 
 from cryptography.exceptions import InvalidSignature
 from pymojihash import hash_to_emoji
@@ -71,12 +71,19 @@ class GroupChat:
     def __init__(self, session: 'Session', group_id: str):
         self.session = session
         self.group_id = group_id
-        self.other_members = set()
+        self.__other_members = set()
         self.__unseen_messages = []
         self.__lock = threading.Lock()
         self.__active = False
+        self.__is_closed = False
+
+    @property
+    def other_members(self) -> Set[str]:
+        self.__check_open()
+        return self.__other_members
 
     def __enter__(self):
+        self.__check_open()
         self.__active = True
         self.__print_messages()
         return self
@@ -85,7 +92,7 @@ class GroupChat:
         self.__active = False
 
     def confirm_add_member(self, user_id: str):
-        self.other_members.add(user_id)
+        self.__other_members.add(user_id)
         dh_public_key_y, rsa_public_key = self.session.get_public_key(user_id)
         self.session.peer_data[user_id] = PeerData.from_public_key_y(
             user_id,
@@ -96,12 +103,13 @@ class GroupChat:
         )
 
     def confirm_remove_member(self, user_id: str):
-        self.other_members.remove(user_id)
+        self.__other_members.remove(user_id)
 
     def __get_shared_secret(self, user_id: str) -> bytes:
         return self.session.peer_data[user_id].shared_secret
 
     def send_message(self, message: str):
+        self.__check_open()
         request = m.GroupChatMessageToServer(
             group_id=self.group_id,
             messages=[
@@ -111,7 +119,7 @@ class GroupChat:
                     message_signature=sign((self.group_id + self.session.user_id + member + message).encode(),
                                            self.session.rsa_private_key),
                 )
-                for member in self.other_members
+                for member in self.__other_members
             ]
         )
         response = self.session.blocking_request(request)
@@ -120,6 +128,7 @@ class GroupChat:
         date = datetime.fromtimestamp(response.timestamp.seconds + response.timestamp.nanos/1e9)
 
     def receive_message(self, message: m.ChatMessageToClient):
+        self.__check_open()
         message_plaintext = decrypt_aes(bytes.fromhex(message.message_ciphertext),
                                         self.__get_shared_secret(message.source)).decode()
         try:
@@ -134,13 +143,14 @@ class GroupChat:
             pass
 
     def get_emoticons(self):
+        self.__check_open()
         return {
             member: hash_to_emoji(
                 sha256_hash(self.__get_shared_secret(member)).hex(),
                 hash_length=4,
                 no_flags=True,
             )
-            for member in self.other_members
+            for member in self.__other_members
         }
 
     def __print_messages(self):
@@ -148,6 +158,13 @@ class GroupChat:
             for message, sender, date in sorted(self.__unseen_messages, key=lambda x: x[2]):
                 print(f'{date} - {sender}: {message}')
             self.__unseen_messages = []
+
+    def close(self):
+        self.__is_closed = True
+
+    def __check_open(self):
+        if self.__is_closed:
+            raise Exception('Group chat is closed')
 
 
 class AdminGroupChat(GroupChat):
@@ -370,6 +387,7 @@ class Session:
             self.__group_chats[response.group_id].receive_message(response.message)
         elif isinstance(response, m.RemoveMemberFromGroupRequestToClient):
             print(f'You were removed from group {response.group_id}')
+            self.__group_chats[response.group_id].close()
             del self.__group_chats[response.group_id]
         else:
             print(f"Unknown response: {response.DESCRIPTOR.name}")

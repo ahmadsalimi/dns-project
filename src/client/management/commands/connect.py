@@ -2,6 +2,7 @@ import argparse
 import cmd
 import re
 from abc import abstractmethod, ABC
+from datetime import datetime
 from functools import wraps
 from typing import Union, Optional, Callable
 
@@ -57,12 +58,14 @@ class ChatShell(BaseShell):
     file = None
 
     def __init__(self, chat: Chat, command: BaseCommand):
-        self.prompt = f'(chat {chat.session.user_id} -> {chat.other_user_id} {chat.get_emoticons()}) '
+        self.prompt = f'({datetime.now()} chat {chat.session.user_id} -> ' \
+                      f'{chat.other_user_id} {chat.get_emoticons()}) '
         super().__init__(command)
         self.chat = chat
 
     def postcmd(self, stop: bool, line: str) -> bool:
-        self.prompt = f'(chat {self.chat.session.user_id} -> {self.chat.other_user_id} {self.chat.get_emoticons()}) '
+        self.prompt = f'({datetime.now()} chat {self.chat.session.user_id} -> ' \
+                      f'{self.chat.other_user_id} {self.chat.get_emoticons()}) '
         return super().postcmd(stop, line)
 
     @command()
@@ -85,9 +88,13 @@ class GroupChatShell(BaseShell):
     file = None
 
     def __init__(self, chat: Union[GroupChat, AdminGroupChat], command: BaseCommand):
-        self.prompt = f'(groupchat {chat.session.user_id} -> {chat.group_id}) '
+        self.prompt = f'({datetime.now()} groupchat {chat.session.user_id} -> {chat.group_id}) '
         super().__init__(command)
         self.chat = chat
+
+    def postcmd(self, stop: bool, line: str) -> bool:
+        self.prompt = f'({datetime.now()} groupchat {self.chat.session.user_id} -> {self.chat.group_id}) '
+        return super().postcmd(stop, line)
 
     @command()
     def do_exit(self):
@@ -105,8 +112,9 @@ class GroupChatShell(BaseShell):
 
     @command()
     def do_members(self):
+        other_members = self.chat.other_members
         self.stdout.write(self.command.style.SUCCESS(self.chat.session.user_id) + '\n')
-        for member in self.chat.other_members:
+        for member in other_members:
             self.stdout.write(self.command.style.SUCCESS(member) + '\n')
 
     @command()
@@ -119,7 +127,11 @@ class AdminGroupChatShell(GroupChatShell):
 
     def __init__(self, chat: AdminGroupChat, command: BaseCommand):
         super().__init__(chat, command)
-        self.prompt = f'(groupchat {chat.session.user_id} -> {chat.group_id} [admin]) '
+        self.prompt = f'({datetime.now()} groupchat {chat.session.user_id} -> {chat.group_id} [admin]) '
+
+    def postcmd(self, stop: bool, line: str) -> bool:
+        self.prompt = f'({datetime.now()} groupchat {self.chat.session.user_id} -> {self.chat.group_id} [admin]) '
+        return super().postcmd(stop, line)
 
     @command(r'^(?P<user_id>.+)$')
     def do_add_member(self, user_id: str):

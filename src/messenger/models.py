@@ -5,10 +5,11 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import dh
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 
-from messenger.utils import sha256_hash
+from messenger.utils import sha256_hash, decrypt_aes, encrypt_aes
 
 
 class Configuration(models.Model):
@@ -46,7 +47,17 @@ class Configuration(models.Model):
 
 class ServerKey(models.Model):
     name = models.CharField(max_length=256, unique=True)
-    value = models.BinaryField()
+    encrypted_value = models.BinaryField(blank=True, null=True)
+
+    @property
+    def value(self) -> bytes:
+        key = sha256_hash(settings.SECRET_KEY.encode())
+        return decrypt_aes(self.encrypted_value, key)
+
+    @value.setter
+    def value(self, value: bytes):
+        key = sha256_hash(settings.SECRET_KEY.encode())
+        self.encrypted_value = encrypt_aes(value, key)
 
     @property
     def signature(self) -> str:
@@ -77,10 +88,20 @@ class Session(models.Model):
     id = models.UUIDField(unique=True, primary_key=True, default=uuid.uuid4)
     user = models.OneToOneField('auth.User', on_delete=models.CASCADE, related_name='session')
     dh_public_key = models.BinaryField()
-    dh_shared_secret = models.BinaryField()
+    encrypted_dh_shared_secret = models.BinaryField()
     rsa_public_key = models.BinaryField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def dh_shared_secret(self) -> bytes:
+        key = sha256_hash(settings.SECRET_KEY.encode())
+        return decrypt_aes(self.encrypted_dh_shared_secret, key)
+
+    @dh_shared_secret.setter
+    def dh_shared_secret(self, value: bytes):
+        key = sha256_hash(settings.SECRET_KEY.encode())
+        self.encrypted_dh_shared_secret = encrypt_aes(value, key)
 
     @property
     def dh_public_key_signature(self) -> str:
